@@ -114,7 +114,7 @@ export async function createPdfBuffer(order: any) {
                 .text('Presented by', 0, presentedY, { align: 'center' });
 
             try {
-                const logoPath = path.join(process.cwd(), 'public/assets/logo.png');
+                const logoPath = path.join(process.cwd(), 'public/assets/logoblack.png');
                 if (fs.existsSync(logoPath)) {
                     doc.image(logoPath, 130, presentedY + 15, { width: 40 });
                 } else {
