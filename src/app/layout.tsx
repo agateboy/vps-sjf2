@@ -21,7 +21,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
         {/* Google Fonts */}
         <link href="https://fonts.googleapis.com/css2?family=Saira+Condensed:wght@400;700&family=Shojumaru&display=swap" rel="stylesheet" />
       </head>
-      <body>
+      <body className="bg-container">
         {children}
         {/* Bootstrap Bundle JS */}
         <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>

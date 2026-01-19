@@ -1,13 +1,17 @@
 'use client';
 
 import React, { useState, useEffect, useRef } from 'react';
+import Head from 'next/head';
 import Swal from 'sweetalert2';
+import { useRouter } from 'next/navigation';
 
 declare global {
   interface Window {
     Html5QrcodeScanner: any;
   }
 }
+
+const SESSION_TIMEOUT = 60 * 60 * 1000; // 1 jam dalam milidetik
 
 export default function AdminPage() {
   const [isProcessing, setIsProcessing] = useState(false);
@@ -18,6 +22,10 @@ export default function AdminPage() {
   const [csvPreview, setCsvPreview] = useState<any>(null);
   const [csvText, setCsvText] = useState<string>('');
   const [isImporting, setIsImporting] = useState(false);
+  const router = useRouter();
+  const inactivityTimerRef = useRef<NodeJS.Timeout | null>(null);
+  const [timeoutWarning, setTimeoutWarning] = useState(false);
+  const warningTimerRef = useRef<NodeJS.Timeout | null>(null);
 
   useEffect(() => {
     // Check if user is authenticated
@@ -60,6 +68,74 @@ export default function AdminPage() {
 
     checkAuth();
   }, []);
+
+  // Function to reset inactivity timeout
+  const resetInactivityTimer = () => {
+    // Clear existing timers
+    if (inactivityTimerRef.current) clearTimeout(inactivityTimerRef.current);
+    if (warningTimerRef.current) clearTimeout(warningTimerRef.current);
+    setTimeoutWarning(false);
+
+    // Set warning timer (55 menit)
+    warningTimerRef.current = setTimeout(() => {
+      setTimeoutWarning(true);
+    }, SESSION_TIMEOUT - (5 * 60 * 1000));
+
+    // Set logout timer (60 menit)
+    inactivityTimerRef.current = setTimeout(() => {
+      handleLogout(true);
+    }, SESSION_TIMEOUT);
+  };
+
+  // Function untuk logout
+  const handleLogout = async (isTimeout: boolean = false) => {
+    if (inactivityTimerRef.current) clearTimeout(inactivityTimerRef.current);
+    if (warningTimerRef.current) clearTimeout(warningTimerRef.current);
+
+    localStorage.removeItem('admin_user');
+    localStorage.removeItem('admin_pass');
+    setAuth(null);
+    setTimeoutWarning(false);
+
+    if (isTimeout) {
+      await Swal.fire({
+        title: 'Session Expired',
+        text: 'Sesi Anda telah berakhir karena tidak ada aktivitas. Silakan login kembali.',
+        icon: 'warning',
+        confirmButtonText: 'OK'
+      });
+    }
+
+    router.push('/');
+  };
+
+  // Inactivity tracking
+  useEffect(() => {
+    if (!auth) return;
+
+    resetInactivityTimer();
+
+    // Track user activity
+    const handleActivity = () => {
+      resetInactivityTimer();
+    };
+
+    window.addEventListener('mousemove', handleActivity);
+    window.addEventListener('keypress', handleActivity);
+    window.addEventListener('click', handleActivity);
+    window.addEventListener('scroll', handleActivity);
+    window.addEventListener('touchstart', handleActivity);
+
+    return () => {
+      window.removeEventListener('mousemove', handleActivity);
+      window.removeEventListener('keypress', handleActivity);
+      window.removeEventListener('click', handleActivity);
+      window.removeEventListener('scroll', handleActivity);
+      window.removeEventListener('touchstart', handleActivity);
+      if (inactivityTimerRef.current) clearTimeout(inactivityTimerRef.current);
+      if (warningTimerRef.current) clearTimeout(warningTimerRef.current);
+    };
+  }, [auth]);
 
   useEffect(() => {
     if (!auth) return;
@@ -255,148 +331,238 @@ export default function AdminPage() {
   }
 
   if (!auth) {
-    return <div className="container mt-5 text-center">Loading...</div>;
+    return <div className="relative min-h-screen text-white flex items-center justify-center z-10">
+      <div className="text-center">
+        <div className="text-2xl font-bold">Loading...</div>
+      </div>
+    </div>;
   }
 
   return (
-    <div className="container mt-3">
-      <div className="d-flex justify-content-between align-items-center mb-3">
-        <h4 className="m-0">Gate Check-in</h4>
-        <button onClick={syncToSheets} id="btnSync" className="btn btn-success btn-sm">
-          Sync Google Sheets
-        </button>
-      </div>
+    <>
+      <Head>
+        <title>Admin Panel - Solo Japanese Festival #2</title>
+        <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" />
+      </Head>
 
-      <div className="card shadow mb-4">
-        <div className="card-header bg-info text-white">
-          🔍 Cari & Download Tiket Manual
-        </div>
-        <div className="card-body">
-          <div className="input-group mb-3">
-            <input
-              type="text"
-              className="form-control"
-              id="searchOrderId"
-              placeholder="Masukkan Order ID (Contoh: SJF2-173...)"
-              value={searchOrderId}
-              onChange={(e) => setSearchOrderId(e.target.value)}
-            />
-            <button
-              className="btn btn-info text-white"
-              type="button"
-              onClick={searchTicket}
+      <div className="relative text-white z-10 flex flex-col min-h-screen bg-gradient-to-b from-slate-900 to-slate-950">
+          {/* --- HEADER --- */}
+        <header className="flex justify-between items-center px-6 py-8 md:px-20 border-b border-white/10">
+          <div className="flex items-center gap-3">
+            <h1 className="text-xl md:text-2xl font-bold tracking-[0.2em] uppercase">Admin Panel</h1>
+          </div>
+          <div className="flex gap-3">
+            <button 
+              onClick={syncToSheets} 
+              id="btnSync" 
+              className="glass-panel px-4 md:px-6 py-2 md:py-3 rounded-lg md:rounded-xl text-[12px] md:text-sm font-bold hover:opacity-80 transition whitespace-nowrap"
             >
-              Cari Tiket
+              Sync Sheets
+            </button>
+            <button 
+              onClick={() => handleLogout(false)} 
+              className="glass-panel px-4 md:px-6 py-2 md:py-3 rounded-lg md:rounded-xl text-[12px] md:text-sm font-bold hover:opacity-80 transition bg-red-500/30 border-red-500/50 whitespace-nowrap"
+              title="Logout dari Admin Panel"
+            >
+              Logout
             </button>
           </div>
+        </header>
 
-          {searchResult && (
-            <div id="searchResult" className="alert alert-success">
-              <strong>Ditemukan!</strong>
-              <br />
-              Nama: <span id="resNama">{searchResult.nama}</span>
-              <br />
-              Email: <span id="resEmail">{searchResult.email}</span>
-              <br />
-              Status: <span>{searchResult.status_bayar}</span>
-              <div className="mt-2">
-                <a
-                  id="btnDownloadManual"
-                  href={`/api/ticket/download/${searchOrderId}`}
-                  className="btn btn-sm btn-dark"
-                  target="_blank"
-                  rel="noreferrer"
+        {/* --- SESSION TIMEOUT WARNING --- */}
+        {timeoutWarning && (
+          <div className="mx-6 md:mx-20 mt-4 glass-panel p-4 rounded-lg border-yellow-500/50 bg-yellow-500/15 backdrop-blur-[50px] border-yellow-400/50">
+            <div className="flex items-start gap-3">
+              <span className="text-xl">⚠️</span>
+              <div className="flex-1">
+                <strong className="block mb-1">Perhatian!</strong>
+                <p className="text-[12px] md:text-sm opacity-90">
+                  Sesi Anda akan berakhir dalam 5 menit karena tidak ada aktivitas. Silakan lakukan sesuatu untuk melanjutkan.
+                </p>
+              </div>
+              <button 
+                onClick={() => setTimeoutWarning(false)}
+                className="text-xl opacity-60 hover:opacity-100 transition"
+              >
+                ✕
+              </button>
+            </div>
+          </div>
+        )}
+
+        <main className="flex-1 px-6 md:px-20 py-8 space-y-6">
+          {/* SEARCH & DOWNLOAD TICKET */}
+          <div className="glass-panel p-6 md:p-8 rounded-2xl md:rounded-3xl">
+            <div className="flex items-center gap-3 mb-6 pb-4 border-b border-white/10">
+              <i className="fas fa-search text-lg md:text-xl"></i>
+              <h2 className="text-base md:text-lg font-bold uppercase tracking-[0.1em]">Cari & Download Tiket</h2>
+            </div>
+            
+            <div className="flex flex-col md:flex-row gap-2 mb-4">
+              <input
+                type="text"
+                id="searchOrderId"
+                placeholder="Masukkan Order ID (Contoh: SJF2-173...)"
+                value={searchOrderId}
+                onChange={(e) => setSearchOrderId(e.target.value)}
+                className="flex-1 bg-white/15 backdrop-blur-[50px] border border-white/50 rounded-lg px-4 py-3 text-white placeholder-white/50 focus:outline-none focus:border-white transition text-[12px] md:text-sm"
+              />
+              <button
+                onClick={searchTicket}
+                className="bg-white text-blue-600 font-bold px-6 md:px-8 py-3 rounded-lg md:rounded-xl hover:bg-white/90 transition text-[12px] md:text-sm whitespace-nowrap"
+              >
+                Cari
+              </button>
+            </div>
+
+            {searchResult && (
+              <div className="bg-green-500/20 border border-green-500/50 rounded-lg p-4 mt-4">
+                <div className="text-sm md:text-base space-y-2">
+                  <div><strong>✅ Ditemukan!</strong></div>
+                  <div>Nama: <span className="font-bold">{searchResult.nama}</span></div>
+                  <div>Email: <span className="font-bold">{searchResult.email}</span></div>
+                  <div>Status: <span className="font-bold">{searchResult.status_bayar}</span></div>
+                  <div className="flex gap-2 mt-4 flex-wrap">
+                    <a
+                      href={`/api/ticket/download/${searchOrderId}`}
+                      className="bg-white text-gray-800 font-bold px-4 py-2 rounded-lg hover:bg-white/90 transition text-[12px] md:text-sm"
+                      target="_blank"
+                      rel="noreferrer"
+                    >
+                      ⬇️ Download PDF
+                    </a>
+                    <a
+                      href={`/api/ticket/view/${searchOrderId}`}
+                      className="glass-panel px-4 py-2 rounded-lg hover:opacity-80 transition text-[12px] md:text-sm"
+                      target="_blank"
+                      rel="noreferrer"
+                    >
+                      Preview
+                    </a>
+                  </div>
+                </div>
+              </div>
+            )}
+          </div>
+
+          {/* QR CODE SCANNER */}
+          <div className="glass-panel p-6 md:p-8 rounded-2xl md:rounded-3xl">
+            <div className="flex items-center gap-3 mb-6 pb-4 border-b border-white/10">
+              <i className="fas fa-qrcode text-lg md:text-xl"></i>
+              <h2 className="text-base md:text-lg font-bold uppercase tracking-[0.1em]">Scan QR Code</h2>
+            </div>
+            
+            <div id="reader" className="rounded-xl overflow-hidden mb-4"></div>
+            
+            <div className="text-center">
+              <p id="statusScan" className="inline-block bg-white/25 backdrop-blur-[50px] border border-white/50 px-4 py-2 rounded-lg text-[12px] md:text-sm font-bold">
+                Sistem Siap Scan...
+              </p>
+            </div>
+          </div>
+
+          {/* CSV IMPORT */}
+          <div className="glass-panel p-6 md:p-8 rounded-2xl md:rounded-3xl">
+            <div className="flex items-center gap-3 mb-6 pb-4 border-b border-white/10">
+              <i className="fas fa-upload text-lg md:text-xl"></i>
+              <h2 className="text-base md:text-lg font-bold uppercase tracking-[0.1em]">Import Data Offline</h2>
+            </div>
+            
+            <p className="text-[12px] md:text-sm opacity-80 mb-4">
+              Format CSV: <code className="bg-white/15 backdrop-blur-[50px] px-2 py-1 rounded border border-white/50 text-[11px] md:text-xs">email,nama,jenis_kelamin,hp,kota,usia,sosmed_type,sosmed_username</code>
+            </p>
+            
+            <div className="flex flex-col md:flex-row gap-2">
+              <input 
+                id="csvFile" 
+                type="file" 
+                accept=".csv" 
+                className="flex-1 bg-white/15 backdrop-blur-[50px] border border-white/50 rounded-lg px-4 py-3 text-white placeholder-white/50 text-[12px] md:text-sm cursor-pointer file:bg-white file:text-gray-800 file:font-bold file:border-0 file:px-4 file:py-2 file:rounded file:mr-4"
+              />
+              <button 
+                id="btnPreviewCsv" 
+                onClick={handlePreviewCsv}
+                className="bg-yellow-500 text-gray-900 font-bold px-6 md:px-8 py-3 rounded-lg hover:bg-yellow-400 transition text-[12px] md:text-sm whitespace-nowrap"
+              >
+                Preview
+              </button>
+            </div>
+          </div>
+
+          {/* CSV PREVIEW */}
+          {csvPreview && (
+            <div className="glass-panel p-6 md:p-8 rounded-2xl md:rounded-3xl border-yellow-500/50">
+              <div className="flex items-center gap-3 mb-6 pb-4 border-b border-white/10">
+                <i className="fas fa-table text-lg md:text-xl"></i>
+                <h2 className="text-base md:text-lg font-bold uppercase tracking-[0.1em]">Preview ({csvPreview.length} baris)</h2>
+              </div>
+              
+              <div className="overflow-x-auto mb-6">
+                <table className="w-full text-[11px] md:text-sm">
+                  <thead className="border-b border-white/20">
+                    <tr>
+                      <th className="text-left py-2 px-2 font-bold">No</th>
+                      <th className="text-left py-2 px-2 font-bold">Nama</th>
+                      <th className="text-left py-2 px-2 font-bold">Email</th>
+                      <th className="text-left py-2 px-2 font-bold">Jenis Kelamin</th>
+                      <th className="text-left py-2 px-2 font-bold">HP</th>
+                      <th className="text-left py-2 px-2 font-bold">Kota</th>
+                      <th className="text-left py-2 px-2 font-bold">Usia</th>
+                      <th className="text-left py-2 px-2 font-bold">Sosmed</th>
+                      <th className="text-left py-2 px-2 font-bold">Status</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {csvPreview.map((row: any) => (
+                      <tr 
+                        key={row.idx} 
+                        className={`border-b border-white/10 ${row.status === 'valid' ? '' : 'bg-red-500/10'}`}
+                      >
+                        <td className="py-2 px-2">{row.idx}</td>
+                        <td className="py-2 px-2">{row.nama || '-'}</td>
+                        <td className="py-2 px-2">{row.email || '-'}</td>
+                        <td className="py-2 px-2">{row.jenis_kelamin || '-'}</td>
+                        <td className="py-2 px-2">{row.no_hp || '-'}</td>
+                        <td className="py-2 px-2">{row.asal_kota || '-'}</td>
+                        <td className="py-2 px-2">{row.kategori_usia || '-'}</td>
+                        <td className="py-2 px-2">{row.sosmed_type || '-'}</td>
+                        <td className="py-2 px-2">
+                          <span className={`inline-block px-2 py-1 rounded text-[10px] font-bold ${row.status === 'valid' ? 'bg-green-500/30 text-green-200' : 'bg-red-500/30 text-red-200'}`}>
+                            {row.status}
+                          </span>
+                        </td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
+              
+              <div className="flex gap-3 flex-wrap">
+                <button 
+                  onClick={handleConfirmImport} 
+                  disabled={isImporting}
+                  className="bg-green-500 text-white font-bold px-6 py-3 rounded-lg hover:bg-green-400 transition text-[12px] md:text-sm disabled:opacity-50 whitespace-nowrap"
                 >
-                  ⬇️ Download PDF
-                </a>
-                <a
-                  id="btnViewManual"
-                  href={`/api/ticket/view/${searchOrderId}`}
-                  className="btn btn-sm btn-outline-dark"
-                  target="_blank"
-                  rel="noreferrer"
+                  {isImporting ? '⏳ Importing...' : '✅ Confirm Import'}
+                </button>
+                <button 
+                  onClick={() => setCsvPreview(null)}
+                  className="glass-panel px-6 py-3 rounded-lg hover:opacity-80 transition text-[12px] md:text-sm"
                 >
-                  👁️ Preview
-                </a>
+                  ❌ Cancel
+                </button>
               </div>
             </div>
           )}
-        </div>
-      </div>
+        </main>
 
-      <div className="card shadow">
-        <div id="reader"></div>
-        <div className="card-body text-center bg-white text-dark">
-          <small className="text-muted">Arahkan kamera ke QR Code Tiket</small>
-        </div>
-      </div>
-
-      <div className="mt-4 text-center">
-        <p id="statusScan" className="badge bg-secondary p-2 fs-6">
-          Sistem Siap Scan...
-        </p>
-      </div>
-
-      <div className="card shadow mt-4">
-        <div className="card-header bg-primary text-white">📥 Import Offline CSV</div>
-        <div className="card-body">
-          <p>Unggah file CSV berisi kolom: <code>email,nama,hp,kota,usia,sosmed_type,sosmed_username</code></p>
-          <div className="d-flex gap-2">
-            <input id="csvFile" type="file" accept=".csv" className="form-control" />
-            <button id="btnPreviewCsv" className="btn btn-warning" onClick={handlePreviewCsv}>
-              👁️ Preview
-            </button>
+        {/* --- FOOTER --- */}
+        <footer className="w-full bg-black/40 backdrop-blur-md border-t border-white/10 mt-auto pt-4">
+          <div className="px-6 md:px-20 py-3 text-center">
+            <div className="text-[8px] md:text-[9px] font-medium tracking-[0.2em] text-white/40 uppercase">© 2026 AWSM EVENTORGANIZER - ADMIN PANEL</div>
           </div>
-        </div>
+        </footer>
       </div>
-
-      {csvPreview && (
-        <div className="card shadow mt-4 border-warning">
-          <div className="card-header bg-warning text-dark">
-            📋 Preview ({csvPreview.length} baris)
-          </div>
-          <div className="card-body">
-            <div className="table-responsive">
-              <table className="table table-sm table-hover">
-                <thead className="table-light">
-                  <tr>
-                    <th>No</th>
-                    <th>Nama</th>
-                    <th>Email</th>
-                    <th>HP</th>
-                    <th>Kota</th>
-                    <th>Usia</th>
-                    <th>Sosmed</th>
-                    <th>Status</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  {csvPreview.map((row: any) => (
-                    <tr key={row.idx} className={row.status === 'valid' ? '' : 'table-danger'}>
-                      <td>{row.idx}</td>
-                      <td>{row.nama || '-'}</td>
-                      <td>{row.email || '-'}</td>
-                      <td>{row.no_hp || '-'}</td>
-                      <td>{row.asal_kota || '-'}</td>
-                      <td>{row.kategori_usia || '-'}</td>
-                      <td>{row.sosmed_type || '-'}</td>
-                      <td><span className={`badge ${row.status === 'valid' ? 'bg-success' : 'bg-danger'}`}>{row.status}</span></td>
-                    </tr>
-                  ))}
-                </tbody>
-              </table>
-            </div>
-            <div className="mt-3 d-flex gap-2">
-              <button className="btn btn-success" onClick={handleConfirmImport} disabled={isImporting}>
-                {isImporting ? '⏳ Importing...' : '✅ Confirm Import'}
-              </button>
-              <button className="btn btn-secondary" onClick={() => setCsvPreview(null)}>
-                ❌ Cancel
-              </button>
-            </div>
-          </div>
-        </div>
-      )}
-    </div>
+    </>
   );
 }

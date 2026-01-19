@@ -16,7 +16,7 @@ const eventData = {
   description: 'Event seru di Lokananta Bloc, Surakarta',
   location: 'Lokananta Bloc, Surakarta',
   googleMapsUrl: 'https://maps.app.goo.gl/b3WvicDyt6PbqPV77',
-  startTime: new Date('2026-02-16T19:00:00'),
+  startTime: new Date('2026-02-16T09:00:00'),
   endTime: new Date('2026-02-16T22:00:00'),
 };
 
@@ -182,7 +182,7 @@ export default function LandingPage() {
                   </h2>
                   <i className="fas fa-caret-right text-xl md:text-2xl hidden md:block"></i>
                 </div>
-                <button className="btn-payment" onClick={() => router.push('/')}>
+                <button className="btn-payment" onClick={() => router.push('/beli-tiket')}>
                   21 Januari 2026
                 </button>
               </div>

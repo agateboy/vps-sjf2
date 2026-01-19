@@ -22,6 +22,7 @@ export default function BeliTiketPage() {
     nama: '',
     email: '',
     hp: '',
+    jenis_kelamin: '',
     asal_kota: '',
     kategori_usia: '',
     sosmed_type: 'Instagram',
@@ -36,7 +37,7 @@ export default function BeliTiketPage() {
   const handleInputChange = (e) => {
     const { name, value, type } = e.target;
     if (type === 'radio') {
-      setFormData({ ...formData, kategori_usia: value });
+      setFormData({ ...formData, [name]: value });
     } else {
       setFormData({ ...formData, [name]: value });
     }
@@ -58,6 +59,7 @@ export default function BeliTiketPage() {
           nama: formData.nama,
           email: formData.email,
           no_hp: formData.hp,
+          jenis_kelamin: formData.jenis_kelamin,
           asal_kota: formData.asal_kota,
           kategori_usia: formData.kategori_usia,
           sosmed_type: formData.sosmed_type,
@@ -106,14 +108,13 @@ export default function BeliTiketPage() {
   // --- REVISI WARNA UNTUK KONTRAS TINGGI ---
   const labelStyle = 'block text-[10px] font-extrabold uppercase tracking-[0.2em] text-white mb-2 ml-1 drop-shadow-[0_2px_3px_rgba(0,0,0,0.4)]';
   const inputStyle =
-    'w-full bg-black/30 backdrop-blur-md border-2 border-white/30 rounded-xl px-5 py-3.5 text-white placeholder:text-white/50 focus:outline-none focus:border-white focus:bg-black/50 transition-all shadow-inner text-sm font-bold';
+    'w-full bg-white/15 backdrop-blur-[50px] border-1.5 border-white/50 rounded-xl px-5 py-3.5 text-white placeholder:text-white/50 focus:outline-none focus:border-white focus:bg-white/20 transition-all shadow-inner text-sm font-bold';
 
   // Tampilan Setelah Berhasil Bayar
   if (showResult) {
     return (
-      <div className="min-h-screen flex items-center justify-center p-6 bg-[#5d94b8]">
-        <div className="glass-panel max-w-xl w-full p-10 text-center animate-in fade-in zoom-in duration-500 rounded-[30px] border-white/40 shadow-2xl bg-black/20">
-          <div className="mb-6 text-6xl drop-shadow-lg">✨</div>
+      <div className="relative min-h-screen flex items-center justify-center p-6 text-white z-10">
+        <div className="glass-panel max-w-xl w-full p-10 text-center animate-in fade-in zoom-in duration-500 rounded-[30px] border-white/50 shadow-2xl bg-white/25 backdrop-blur-[50px]">
           <h2 className="text-3xl font-black mb-3 text-white uppercase italic tracking-tighter drop-shadow-md">Pembayaran Berhasil!</h2>
           <p className="mb-8 text-white font-bold drop-shadow-sm">Tiket digital Anda telah siap. Silakan cek email atau download di bawah.</p>
 
@@ -135,7 +136,7 @@ export default function BeliTiketPage() {
   }
 
   return (
-    <div className="relative min-h-screen flex flex-col font-['Plus_Jakarta_Sans']">
+    <div className="relative flex flex-col min-h-screen font-['Plus_Jakarta_Sans'] text-white z-10">
       {/* Navigation */}
       <nav className="w-full p-8 md:px-20 z-30">
         <Link href="/" className="inline-flex items-center gap-3 text-white hover:opacity-80 transition-all no-underline group">
@@ -179,7 +180,7 @@ export default function BeliTiketPage() {
 
         {/* Form Section */}
         <div className="lg:col-span-7 w-full flex justify-center lg:justify-end animate-in slide-in-from-bottom duration-700">
-          <div className="glass-panel w-full max-w-[620px] p-8 md:p-12 rounded-[35px] relative border-white/40 shadow-[0_20px_50px_rgba(0,0,0,0.3)] bg-white/10 backdrop-blur-3xl">
+          <div className="glass-panel w-full max-w-[620px] p-8 md:p-12 rounded-[35px] relative border-white/50 shadow-[0_20px_50px_rgba(0,0,0,0.3)] bg-white/25 backdrop-blur-[50px]">
             <div className="mb-8 text-center lg:text-left">
               <h2 className="text-2xl font-black text-white uppercase italic tracking-tighter drop-shadow-sm">Data Pemesan</h2>
               <div className="h-1.5 w-16 bg-white mt-2 mx-auto lg:mx-0 rounded-full shadow-sm"></div>
@@ -189,6 +190,23 @@ export default function BeliTiketPage() {
               <div className="space-y-1">
                 <label className={labelStyle}>Nama Lengkap</label>
                 <input type="text" name="nama" required value={formData.nama} onChange={handleInputChange} className={inputStyle} placeholder="Nama sesuai tanda pengenal" />
+              </div>
+
+              <div className="space-y-3">
+                <label className={labelStyle}>Jenis Kelamin</label>
+                <div className="grid grid-cols-2 gap-3">
+                  {['Laki-laki', 'Perempuan'].map((gender) => (
+                    <label key={gender} className="cursor-pointer">
+                      <input type="radio" name="jenis_kelamin" value={gender} required className="hidden" checked={formData.jenis_kelamin === gender} onChange={handleInputChange} />
+                      <span
+                        className={`flex items-center justify-center py-3 border-2 rounded-xl text-[11px] font-black transition-all shadow-sm hover:scale-[1.02]
+                          ${formData.jenis_kelamin === gender ? 'bg-white text-black border-white' : 'bg-black/30 text-white border-white/40 hover:bg-black/50'}`}
+                      >
+                        {gender}
+                      </span>
+                    </label>
+                  ))}
+                </div>
               </div>
 
               <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
@@ -211,21 +229,21 @@ export default function BeliTiketPage() {
               <div className="grid grid-cols-5 gap-3 items-end">
                 <div className="col-span-2 space-y-1">
                   <label className={labelStyle}>Sosmed</label>
-                  <select name="sosmed_type" value={formData.sosmed_type} onChange={handleInputChange} className={`${inputStyle} appearance-none cursor-pointer font-black bg-[#5d94b8] !px-3 text-center md:text-left`}>
-                    <option value="Instagram" className="bg-[#5d94b8] text-white">
+                  <select name="sosmed_type" value={formData.sosmed_type} onChange={handleInputChange} className={`${inputStyle} appearance-none cursor-pointer font-black bg-white/25 !px-3 text-center md:text-left`}>
+                    <option value="Instagram" className="bg-white/25 text-white">
                       Instagram
                     </option>
-                    <option value="TikTok" className="bg-[#5d94b8] text-white">
+                    <option value="TikTok" className="bg-white/25 text-white">
                       Tiktok
                     </option>
-                    <option value="Facebook" className="bg-[#5d94b8] text-white">
+                    <option value="Facebook" className="bg-white/25 text-white">
                       Facebook
                     </option>
                   </select>
                 </div>
                 <div className="col-span-3 space-y-1">
                   <label className={labelStyle}>Username</label>
-                  <input type="text" name="sosmed_username" required value={formData.sosmed_username} onChange={handleInputChange} className={`${inputStyle} !px-4`} placeholder="@username" />
+                  <input type="text" name="sosmed_username" required value={formData.sosmed_username} onChange={handleInputChange} className={`${inputStyle} !px-4`} placeholder="username tanpa @" />
                 </div>
               </div>
 
