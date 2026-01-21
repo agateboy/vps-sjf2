@@ -28,7 +28,8 @@ export async function GET(req: NextRequest) {
   try {
     await initializeDatabase();
 
-    const orders = Order.findAll({ status_bayar: 'settlement' });
+    // Ambil data yang sudah lunas
+    const orders = await Order.findAll({ where: { status_bayar: 'settlement' } });
 
     if (orders.length === 0) {
       return NextResponse.json({
@@ -59,9 +60,11 @@ export async function GET(req: NextRequest) {
 
     const sheet = doc.sheetsByIndex[0];
 
+    // --- UPDATE 1: TAMBAHKAN 'Jenis Kelamin' DI HEADER ---
     const headers = [
       'Order ID',
       'Nama',
+      'Jenis Kelamin', // <--- BARU
       'No HP',
       'Email',
       'Asal Kota',
@@ -72,12 +75,14 @@ export async function GET(req: NextRequest) {
       'Waktu Beli'
     ];
 
-    await sheet.clear();
-    await sheet.setHeaderRow(headers);
+    await sheet.clear(); // Hapus data lama biar bersih
+    await sheet.setHeaderRow(headers); // Set header baru
 
+    // --- UPDATE 2: MAPPING DATA ---
     const rows = orders.map((o: any) => ({
       'Order ID': o.order_id,
       'Nama': o.nama,
+      'Jenis Kelamin': o.jenis_kelamin || '-', // <--- BARU (Ambil dari DB)
       'No HP': `'${o.no_hp}`,
       'Email': o.email,
       'Asal Kota': o.asal_kota,

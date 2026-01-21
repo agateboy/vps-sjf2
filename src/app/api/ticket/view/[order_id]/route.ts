@@ -16,9 +16,20 @@ export async function GET(
       return NextResponse.json({ message: "Data tidak ditemukan di database." }, { status: 404 });
     }
 
+    // Jika status masih pending, coba cek ulang ke Midtrans
     if (order.status_bayar !== 'settlement') {
-      // Try to update from Midtrans
-      // await updateStatusFromMidtrans(order);
+      await updateStatusFromMidtrans(order);
+      // Refresh order object untuk dapat status terbaru
+      const refreshedOrder = Order.findOne({ order_id });
+      if (refreshedOrder) {
+        const pdfBuffer = await createPdfBuffer(refreshedOrder);
+        return new NextResponse(new Uint8Array(pdfBuffer), {
+          headers: {
+            'Content-Type': 'application/pdf',
+            'Content-Disposition': `inline; filename=tiket-${refreshedOrder.nama}.pdf`
+          }
+        });
+      }
     }
 
     const pdfBuffer = await createPdfBuffer(order);

@@ -7,7 +7,7 @@ const db = new Database(dbPath);
 // Enable foreign keys
 db.pragma('foreign_keys = ON');
 
-// Create tables if they don't exist
+// 1. Create tables if they don't exist (Updated Schema)
 db.exec(`
   CREATE TABLE IF NOT EXISTS orders (
     id INTEGER PRIMARY KEY AUTOINCREMENT,
@@ -15,6 +15,7 @@ db.exec(`
     nama TEXT NOT NULL,
     email TEXT NOT NULL,
     no_hp TEXT NOT NULL,
+    jenis_kelamin TEXT, 
     asal_kota TEXT NOT NULL,
     kategori_usia TEXT NOT NULL,
     sosmed_type TEXT NOT NULL,
@@ -26,31 +27,53 @@ db.exec(`
   );
 `);
 
+// 2. AUTO MIGRATION: Tambahkan kolom jenis_kelamin jika belum ada (untuk DB lama)
+try {
+  const columns = db.prepare("PRAGMA table_info(orders)").all() as any[];
+  const hasGender = columns.some(col => col.name === 'jenis_kelamin');
+  
+  if (!hasGender) {
+    console.log("Migrating database: Adding column 'jenis_kelamin'...");
+    db.prepare("ALTER TABLE orders ADD COLUMN jenis_kelamin TEXT").run();
+  }
+} catch (error) {
+  console.error("Migration warning:", error);
+}
+
 // Helper functions
 export const Order = {
+  // 3. Update Create Function
   create: (data: {
     order_id: string;
     nama: string;
     email: string;
     no_hp: string;
+    jenis_kelamin: string; // <--- BARU
     asal_kota: string;
     kategori_usia: string;
     sosmed_type: string;
     sosmed_username: string;
+    status_bayar?: string; // Optional
   }) => {
     const stmt = db.prepare(`
-      INSERT INTO orders (order_id, nama, email, no_hp, asal_kota, kategori_usia, sosmed_type, sosmed_username)
-      VALUES (?, ?, ?, ?, ?, ?, ?, ?)
+      INSERT INTO orders (
+        order_id, nama, email, no_hp, jenis_kelamin, 
+        asal_kota, kategori_usia, sosmed_type, sosmed_username, status_bayar
+      )
+      VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
     `);
+    
     return stmt.run(
       data.order_id,
       data.nama,
       data.email,
       data.no_hp,
+      data.jenis_kelamin, // <--- BARU
       data.asal_kota,
       data.kategori_usia,
       data.sosmed_type,
-      data.sosmed_username
+      data.sosmed_username,
+      data.status_bayar || 'pending'
     );
   },
 
@@ -58,6 +81,11 @@ export const Order = {
     if (where.order_id) {
       const stmt = db.prepare('SELECT * FROM orders WHERE order_id = ?');
       return stmt.get(where.order_id) as any;
+    }
+    // Tambahan: Cari berdasarkan Nama & No HP (untuk cek duplikat)
+    if (where.nama && where.no_hp) {
+      const stmt = db.prepare('SELECT * FROM orders WHERE nama = ? AND no_hp = ?');
+      return stmt.get(where.nama, where.no_hp) as any;
     }
     return null;
   },
@@ -82,8 +110,11 @@ export const Order = {
     const values: any[] = [];
 
     Object.entries(data).forEach(([key, value]) => {
-      fields.push(`${key} = ?`);
-      values.push(value);
+      // Pastikan tidak mengupdate ID
+      if (key !== 'id' && key !== 'order_id') {
+        fields.push(`${key} = ?`);
+        values.push(value);
+      }
     });
 
     values.push(new Date().toISOString());
@@ -96,9 +127,7 @@ export const Order = {
 };
 
 export async function initializeDatabase() {
-  // Database is already initialized above
   console.log('Database ready at:', dbPath);
 }
 
 export default db;
-

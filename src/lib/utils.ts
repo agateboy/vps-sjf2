@@ -222,7 +222,16 @@ export async function updateStatusFromMidtrans(order: any) {
         }
 
         if (newStatus !== order.status_bayar) {
-            await order.update({ status_bayar: newStatus });
+            Order.update(order.order_id, { status_bayar: newStatus });
+            console.log(`Status ${order.order_id} diperbarui dari ${order.status_bayar} ke ${newStatus}`);
+
+            // Jika berubah ke settlement, kirim email tiket
+            if (newStatus === 'settlement') {
+                const updatedOrder = Order.findOne({ order_id: order.order_id });
+                if (updatedOrder) {
+                    await sendTicketEmail(updatedOrder);
+                }
+            }
         }
     } catch (e: any) {
         console.log(`Gagal cek Midtrans untuk ${order.order_id}: ${e.message}`);

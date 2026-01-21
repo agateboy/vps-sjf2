@@ -1,7 +1,6 @@
 'use client';
 
 import React, { useState, useEffect, useRef } from 'react';
-import Head from 'next/head';
 import { useRouter } from 'next/navigation';
 
 interface TimeLeft {
@@ -20,7 +19,6 @@ const eventData = {
   endTime: new Date('2026-02-16T22:00:00'),
 };
 
-// --- DATA AKTIVITAS (Sudah Diperbaiki) ---
 const activityCompetitions = [
   { name: 'MOBILE LEGEND COMPETITION', link: 'https://www.instagram.com/p/DTiCDimkhbA/?img_index=1' },
   { name: 'COSPLAY COMPETITION', link: 'https://www.instagram.com/solojapanesefestival/' },
@@ -29,18 +27,18 @@ const activityCompetitions = [
   { name: 'PHOTOGRAPHY COMPETITION', link: 'https://www.instagram.com/solojapanesefestival/' },
   { name: 'BEYBLADE COMPETITION', link: 'https://www.instagram.com/solojapanesefestival/' },
 ];
+
 export default function LandingPage() {
   const router = useRouter();
   const [timeLeft, setTimeLeft] = useState<TimeLeft>({ d: '00', h: '00', m: '00', s: '00' });
   const [dropdownOpen, setDropdownOpen] = useState(false);
   const dropdownRef = useRef<HTMLDivElement>(null);
 
-  // --- TAMBAHAN UNTUK FIX HYDRATION ERROR ---
+  // --- FIX HYDRATION ERROR ---
   const [isClient, setIsClient] = useState(false);
   useEffect(() => {
     setIsClient(true);
   }, []);
-  // ------------------------------------------
 
   useEffect(() => {
     const targetDate = eventData.startTime.getTime();
@@ -98,49 +96,46 @@ export default function LandingPage() {
     return () => document.removeEventListener('mousedown', handleClickOutside);
   }, []);
 
-const [isMenuOpen, setIsMenuOpen] = useState(false);
-const [isPartnerOpen, setIsPartnerOpen] = useState(false); // State untuk dropdown partner
-const [isScrolled, setIsScrolled] = useState(false); // State untuk deteksi scroll
+  const [isMenuOpen, setIsMenuOpen] = useState(false);
+  const [isPartnerOpen, setIsPartnerOpen] = useState(false);
+  const [isScrolled, setIsScrolled] = useState(false);
 
-// Fungsi deteksi scroll
-useEffect(() => {
-  const handleScroll = () => {
-    if (window.scrollY > 50) {
-      setIsScrolled(true);
-    } else {
-      setIsScrolled(false);
-    }
-  };
-  window.addEventListener('scroll', handleScroll);
-  return () => window.removeEventListener('scroll', handleScroll);
-}, []);
+  useEffect(() => {
+    const handleScroll = () => {
+      if (window.scrollY > 50) {
+        setIsScrolled(true);
+      } else {
+        setIsScrolled(false);
+      }
+    };
+    window.addEventListener('scroll', handleScroll);
+    return () => window.removeEventListener('scroll', handleScroll);
+  }, []);
 
+  const navLinks = [
+    { name: 'Beranda', href: '#hero' },
+    { name: 'Desa Shinobi', href: '#kartuID' },
+    { name: 'Kartu Misi', href: '#aktivitas' },
+    {
+      name: 'Partner',
+      dropdown: [
+        { name: 'Partner Komunitas', href: '#partner' },
+        { name: 'Media Partner ', href: '#media' },
+      ],
+    },
+    { name: 'Lokasi', href: '#lokasi' },
+  ];
 
-const navLinks = [
-  { name: 'Beranda', href: '#hero' },
-  { name: 'Desa Shinobi', href: '#kartuID' },
-  { name: 'Kartu Misi', href: '#aktivitas' },
-  {
-    name: 'Partner',
-    dropdown: [
-      { name: 'Partner Komunitas', href: '#partner' },
-      { name: 'Media Partner ', href: '#media' },
-    ],
-  },
-  { name: 'Lokasi', href: '#lokasi' },
-];
   return (
     <div className="w-full overflow-x-hidden">
-      <Head>
-        <title>Solo Japanese Festival #2</title>
-        <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" />
-      </Head>
+      {/* Head removed: Gunakan Metadata API di layout.tsx jika butuh title/meta */}
+      
       {/* --- HERO SECTION --- */}
       <section id="hero" className="hero-section relative w-full overflow-hidden bg-black">
         <div className="relative z-[100] flex flex-col min-h-screen text-white">
           <header className={`fixed top-0 left-0 right-0 z-[1000] transition-all duration-500 group/header ${isScrolled || isMenuOpen ? 'bg-black/95 backdrop-blur-md py-4 shadow-lg' : 'bg-transparent py-6 md:py-8'}`}>
             <div className="flex justify-between items-center px-5 md:px-20 max-w-[1440px] mx-auto w-full relative z-[1002]">
-              {/* LOGO REACTION */}
+              {/* LOGO */}
               <div className="flex items-center gap-2 md:gap-3 cursor-pointer">
                 <img src="/assets/logo.png" alt="Logo" className="w-8 h-8 md:w-10 md:h-10 object-contain transition-transform duration-500 group-hover/header:scale-110" />
                 <div className="text-[9px] md:text-[10px] tracking-[0.2em] font-bold leading-tight uppercase">
@@ -149,19 +144,18 @@ const navLinks = [
                 </div>
               </div>
 
-              {/* DESKTOP NAV - TEXT ONLY INTERACTION */}
+              {/* DESKTOP NAV */}
               <nav className="hidden md:flex items-center gap-8">
                 {navLinks.map((link, index) => (
                   <div key={link.name} className="relative group/link" onMouseEnter={() => link.dropdown && setIsPartnerOpen(true)} onMouseLeave={() => link.dropdown && setIsPartnerOpen(false)}>
+                    {/* PERBAIKAN: ClassName dibuat satu baris string & href diberi fallback */}
                     <a
-                      href={link.href}
+                      href={link.href || '#'}
                       style={{
                         textDecoration: 'none',
-                        transitionDelay: `${index * 40}ms`, // Membuat efek ombak antar menu
+                        transitionDelay: `${index * 40}ms`,
                       }}
-                      className="text-[10px] md:text-xs font-black uppercase tracking-[0.15em] text-white transition-all duration-500 flex items-center gap-1 py-1 
-                       group-hover/header:translate-y-[-4px] group-hover/header:text-white/70 
-                       group-hover/link:!text-[#d7d9dd] group-hover/link:!translate-y-[-8px] group-hover/link:tracking-[0.3em]"
+                      className="text-[10px] md:text-xs font-black uppercase tracking-[0.15em] text-white transition-all duration-500 flex items-center gap-1 py-1 group-hover/header:translate-y-[-4px] group-hover/header:text-white/70 group-hover/link:!text-[#d7d9dd] group-hover/link:!translate-y-[-8px] group-hover/link:tracking-[0.3em]"
                     >
                       {link.name}
                       {link.dropdown && <i className={`fas fa-chevron-down text-[8px] transition-transform duration-300 ${isPartnerOpen ? 'rotate-180' : ''}`}></i>}
@@ -190,13 +184,12 @@ const navLinks = [
               </button>
             </div>
 
-            {/* MOBILE MENU - TEXT INTERACTION */}
+            {/* MOBILE MENU */}
             <div className={`fixed inset-0 h-screen bg-black/98 backdrop-blur-2xl z-[1001] flex flex-col items-end justify-center transition-all duration-500 ${isMenuOpen ? 'opacity-100 visible' : 'opacity-0 invisible translate-y-10'}`}>
               <nav className="flex flex-col items-center gap-6 w-full px-6 max-h-screen overflow-y-auto py-20">
                 {navLinks.map((link) => (
                   <div key={link.name} className="text-center w-full group/mob">
                     {link.dropdown ? (
-                      // Khusus untuk Menu dengan Dropdown di Mobile
                       <div className="flex flex-col items-center">
                         <span className="text-lg font-bold uppercase tracking-[0.15em] text-white/50 block py-1">{link.name}</span>
                         <div className="flex flex-col items-center gap-4 mt-2">
@@ -204,7 +197,7 @@ const navLinks = [
                             <a
                               key={sub.name}
                               href={sub.href}
-                              onClick={() => setIsMenuOpen(false)} // Menutup menu saat diklik
+                              onClick={() => setIsMenuOpen(false)}
                               className="text-base font-bold uppercase tracking-[0.1em] text-white hover:text-[#3b82f6] transition-all"
                             >
                               {sub.name}
@@ -213,11 +206,10 @@ const navLinks = [
                         </div>
                       </div>
                     ) : (
-                      // Menu Biasa
                       <a
                         href={link.href}
                         style={{ textDecoration: 'none' }}
-                        onClick={() => setIsMenuOpen(false)} // Menutup menu saat diklik
+                        onClick={() => setIsMenuOpen(false)}
                         className="text-lg font-bold uppercase tracking-[0.15em] text-white block py-1 transition-all duration-300 group-hover/mob:tracking-[0.4em] group-hover/mob:text-[#3b82f6]"
                       >
                         {link.name}
@@ -286,14 +278,15 @@ const navLinks = [
                     <span className="text-sm md:text-base font-normal">Presale IDR 40.000</span>
                   </h2>
                 </div>
-                <button className="btn-payment w-full md:w-auto" onClick={() => router.push('/beli-tiket')}>
-                  21 Januari 2026
+                <button className="btn-payment w-full md:w-auto" onClick={() => router.push('/')}>
+                  Coming Soon!!!
                 </button>
               </div>
             </div>
           </main>
         </div>
       </section>
+
       {/* --- SECTION DESA SHINOBHI --- */}
       <section
         id="kartuID"
@@ -335,6 +328,7 @@ const navLinks = [
           </div>
         </div>
       </section>
+
       {/* --- SECTION KARTU MISI --- */}
       <section id="misi" className="misi-section min-h-[500px] md:min-h-[700px] flex items-center justify-center relative overflow-hidden py-10 md:py-16">
         <div className="w-full max-w-5xl px-[18%] md:px-20 lg:px-32 flex flex-col items-center md:items-start">
@@ -345,9 +339,7 @@ const navLinks = [
             KARTU MISI WARGA DESA SHINOBI
           </h2>
 
-          {/* flex-col-reverse: Teks naik ke atas button saat mobile, normal saat desktop */}
           <div className="flex flex-col-reverse md:flex-row items-center md:items-start gap-4 md:gap-12 w-full">
-            {/* Group Button */}
             <div className="flex flex-col gap-3 md:gap-4 w-full md:w-[280px] rounded-2xl shrink-0">
               <button
                 onClick={() => {
@@ -380,7 +372,6 @@ const navLinks = [
               </button>
             </div>
 
-            {/* Teks Deskripsi */}
             <div className="w-full md:flex-1">
               <p className="font-bold leading-relaxed text-[#4a4a4a] text-left md:text-left mb-2 md:mb-0" style={{ fontSize: 'clamp(10px, 1.8vw, 19px)' }}>
                 Jadilah Bagian Dari Keseruan Misi Warga Desa Shinobi Di Solo Japanese Festival #2 Heroes Comeback! Selesaikan Tantangannya, Kumpulkan Poinnya, Dan Bawa Pulang DoorPrize Dengan Total Hadiah Jutaan Rupiah!
@@ -433,6 +424,7 @@ const navLinks = [
           </div>
         </div>
       </section>
+
       {/* --- SECTION SPONSOR & PARTNERS --- */}
       <section id="sponsor" className="bg-white py-16 md:py-24 px-5 md:px-20">
         <div className="max-w-6xl mx-auto grid grid-cols-1 md:grid-cols-2 gap-8">
@@ -465,7 +457,8 @@ const navLinks = [
           </div>
         </div>
       </section>
-      {/* --- SECTION PARTNER KOMUNITAS (REVISI INTERAKTIF) --- */}
+
+      {/* --- SECTION PARTNER KOMUNITAS --- */}
       <section id="partner" className="bg-white py-16 md:py-24 px-5 md:px-20 border-t border-gray-100">
         <div className="max-w-6xl mx-auto">
           <div className="flex flex-col md:flex-row items-center justify-center gap-x-4 mb-8 text-center">
@@ -519,7 +512,8 @@ const navLinks = [
           </div>
         </div>
       </section>
-      {/* --- SECTION TENANT FNB (REVISI INTERAKTIF) --- */}
+
+      {/* --- SECTION TENANT FNB --- */}
       <section id="tenant" className="bg-white py-16 md:py-24 px-5 md:px-20 border-t border-gray-100">
         <div className="max-w-6xl mx-auto">
           <div className="flex flex-col md:flex-row items-center justify-between gap-6 mb-12">
@@ -557,6 +551,7 @@ const navLinks = [
           </div>
         </div>
       </section>
+
       {/* --- SECTION LOKASI ACARA --- */}
       <section id="lokasi" className="bg-white py-12 md:py-24 px-4 md:px-20 border-t border-gray-100 relative overflow-hidden">
         <div className="max-w-6xl mx-auto">
@@ -592,9 +587,7 @@ const navLinks = [
               </div>
             </div>
 
-            {/* Label Lokananta Bloc - Diposisikan ulang agar aman di mobile */}
             <div className="absolute right-4 bottom-8 md:right-[20%] md:top-[42%] md:bottom-auto flex items-center gap-2 md:gap-4 cursor-pointer group/pin" onClick={openGoogleMaps}>
-              {/* Pin Icon */}
               <div className="relative shrink-0">
                 <div className="bg-[#b1362f] w-8 h-8 md:w-14 md:h-14 rounded-full flex items-center justify-center shadow-lg transform group-hover/pin:scale-110 transition-transform">
                   <i className="fas fa-map-marker-alt text-white text-sm md:text-2xl"></i>
@@ -602,7 +595,6 @@ const navLinks = [
                 <div className="absolute inset-0 bg-[#b1362f] rounded-full animate-ping opacity-20"></div>
               </div>
 
-              {/* Kotak Info Merah */}
               <div className="bg-[#b1362f] text-white p-2.5 md:p-5 rounded-lg md:rounded-xl shadow-2xl border-b-4 border-black/20 max-w-[150px] md:max-w-[220px]">
                 <p className="font-black text-[10px] md:text-xl leading-none mb-1 uppercase tracking-tight">LOKANANTA BLOC</p>
                 <p className="text-[8px] md:text-[10px] opacity-90 leading-tight font-bold">Kerten, Kec. Laweyan, Kota Surakarta, Jawa Tengah 57143</p>
@@ -611,7 +603,8 @@ const navLinks = [
           </div>
         </div>
       </section>
-      {/* --- SECTION DENAH DESA SHINOBI --- */}
+
+      {/* --- SECTION DENAH --- */}
       <section id="denah" className="w-full relative bg-[#ffffff] pt-6 md:pt-20 pb-0">
         <div className="absolute top-20 left-10 z-20 bg-white/80 backdrop-blur-md p-4 rounded-2xl shadow-xl hidden md:block">
           <h2 className="font-black text-[#b1362f] text-2xl">DENAH DESA SHINOBI</h2>
@@ -623,7 +616,7 @@ const navLinks = [
         </div>
       </section>
 
-      {/* --- SECTION: DETAIL 3D --- */}
+      {/* --- SECTION DETAIL 3D --- */}
       <section id="detail3d" className="w-full bg-[#ffffff] mt-10 md:mt-40 pt-10 md:pt-0 pb-0 md:pb-40 px-4 md:px-20">
         <div className="max-w-5xl mx-auto bg-white rounded-[30px] md:rounded-[60px] p-4 md:p-12 shadow-[0_10px_40px_rgba(0,0,0,0.04)] md:shadow-[0_40px_80px_rgba(0,0,0,0.08)] border border-gray-50">
           <div className="grid grid-cols-2 lg:grid-cols-3 gap-3 md:gap-8">
@@ -632,32 +625,27 @@ const navLinks = [
               <img src="/assets/26.png" alt="Detail 1" className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-110" />
               <div className="absolute inset-0 bg-black/0 group-hover:bg-black/10 transition-colors duration-300" />
             </div>
-
             {/* Image 2 */}
             <div className="order-2 group overflow-hidden rounded-[15px] md:rounded-[30px] aspect-[16/10] shadow-sm md:shadow-md bg-gray-100 relative">
               <img src="/assets/25.png" alt="Detail 2" className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-110" />
               <div className="absolute inset-0 bg-black/0 group-hover:bg-black/10 transition-colors duration-300" />
             </div>
-
             {/* Image 3 */}
             <div className="order-3 group overflow-hidden rounded-[15px] md:rounded-[30px] aspect-[16/10] shadow-sm md:shadow-md bg-gray-100 relative">
               <img src="/assets/24.png" alt="Detail 3" className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-110" />
               <div className="absolute inset-0 bg-black/0 group-hover:bg-black/10 transition-colors duration-300" />
             </div>
-
             {/* Label Merah */}
             <div className="order-last lg:order-4 bg-[#b1362f] rounded-[15px] md:rounded-[30px] flex items-center justify-center p-2 md:p-8 aspect-[16/10] shadow-lg hover:brightness-110 transition-all duration-300 transform hover:scale-[1.02] cursor-default">
               <h2 className="text-white font-[900] italic tracking-tighter text-center leading-none" style={{ fontSize: 'clamp(18px, 5vw, 55px)', fontFamily: '"Arial Black", sans-serif' }}>
                 DETAIL 3D
               </h2>
             </div>
-
             {/* Image 4 */}
             <div className="order-4 lg:order-5 group overflow-hidden rounded-[15px] md:rounded-[30px] aspect-[16/10] shadow-sm md:shadow-md bg-gray-100 relative">
               <img src="/assets/23.png" alt="Detail 4" className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-110" />
               <div className="absolute inset-0 bg-black/0 group-hover:bg-black/10 transition-colors duration-300" />
             </div>
-
             {/* Image 5 */}
             <div className="order-5 lg:order-6 group overflow-hidden rounded-[15px] md:rounded-[30px] aspect-[16/10] shadow-sm md:shadow-md bg-gray-100 relative">
               <img src="/assets/22.png" alt="Detail 5" className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-110" />
@@ -670,29 +658,22 @@ const navLinks = [
       {/* --- SECTION SPESIFIKASI PANGGUNG --- */}
       <section id="spesifikasi" className="w-full bg-white py-20 px-4 md:px-10 overflow-hidden">
         <div className="max-w-6xl mx-auto relative flex flex-col lg:flex-row items-center">
-          {/* Sisi Kiri: FOTO UTAMA (Besar & Dominan) */}
           <div className="w-full lg:w-[60%] z-20 relative">
             <div className="rounded-[25px] overflow-hidden shadow-2xl">
               <img src="/assets/panggung.png" alt="Desain Panggung" className="w-full h-auto object-cover block" />
             </div>
           </div>
-
-          {/* Sisi Kanan: Green Card (Masuk ke bawah foto) */}
-          {/* Sisi kiri dibuat lurus (rounded-none), sisi kanan sangat bulat (rounded-r-[40px]) */}
           <div className="w-full lg:w-[50%] bg-[#5b7c4a] lg:rounded-r-[40px] lg:rounded-l-none rounded-[30px] py-10 px-6 md:pl-20 md:pr-10 shadow-xl -mt-5 lg:mt-0 lg:-ml-16 z-10">
             <h2 className="text-white font-bold tracking-tight mb-8 uppercase text-left" style={{ fontSize: 'clamp(24px, 4vw, 42px)', fontFamily: 'Arial, sans-serif' }}>
               SPESIFIKASI PANGGUNG
             </h2>
-
             <div className="flex flex-col gap-3">
-              {/* Item List: Box Horizontal Tipis */}
               {[
                 { label: 'Panggung Ukuran', val: '8mX6mX5m' },
                 { label: 'Sound', val: '10.000 Watt' },
                 { label: 'Parled RGB, Moving Beam, Smoke', val: '' },
               ].map((item, index) => (
                 <div key={index} className="flex items-center gap-4 border border-white p-2 md:p-3 bg-transparent w-full">
-                  {/* Bullet Point Putih */}
                   <div className="w-6 h-6 bg-white rounded-full flex items-center justify-center shrink-0">
                     <div className="w-1.5 h-1.5 bg-[#5b7c4a] rounded-full"></div>
                   </div>
@@ -705,7 +686,8 @@ const navLinks = [
           </div>
         </div>
       </section>
-      {/* --- SECTION MEDIA PARTNER (REVISED) --- */}
+
+      {/* --- SECTION MEDIA PARTNER --- */}
       <section
         id="media"
         className="relative bg-white py-16 md:py-24 px-5 md:px-20 border-t border-gray-100"
@@ -743,14 +725,13 @@ const navLinks = [
           </div>
         </div>
       </section>
+
+      {/* --- FOOTER --- */}
       <footer className="w-full block overflow-hidden font-['Montserrat',sans-serif]">
-        {/* Container utama - Tetap md:h-[90vh] untuk PC agar tidak berubah */}
         <div className="relative w-full h-auto md:h-[90vh] bg-cover bg-center bg-no-repeat flex flex-col" style={{ backgroundImage: "url('/assets/footer.png')" }}>
-          {/* OVERLAY: Diperkuat bg-black/60 untuk mobile agar teks sangat kontras */}
           <div className="absolute inset-0 bg-black/60 md:bg-gradient-to-r md:from-black/90 md:via-black/30 md:to-transparent z-0"></div>
 
           <div className="relative z-10 w-full max-w-[1440px] mx-auto px-6 md:px-20 py-12 md:py-14 flex flex-col h-full justify-center md:justify-start">
-            {/* 1. TOP: Logo */}
             <div className="flex items-center gap-3">
               <img src="/assets/logo.png" alt="AWSM Logo" className="w-8 h-8 md:w-10 md:h-10 object-contain" />
               <div className="text-white text-[10px] md:text-[12px] font-bold tracking-[0.2em] uppercase leading-tight">
@@ -758,7 +739,6 @@ const navLinks = [
               </div>
             </div>
 
-            {/* 2. MAIN CONTENT */}
             <div className="mt-10 md:mt-32 mb-6 md:mb-8">
               <p className="text-white text-[10px] md:text-[14px] tracking-normal mb-3 uppercase opacity-90 font-medium">
                 SOLO JAPANESE FESTIVAL #2 : <span className="font-bold">HEROES COME BACK!</span>
@@ -776,17 +756,15 @@ const navLinks = [
               </p>
             </div>
 
-            {/* 3. CONTACT INFO - Perbaikan Gap Mobile */}
             <div className="flex flex-col gap-3 md:flex-row md:items-center md:gap-10 mt-2 md:mt-8">
               <span className="text-white text-[10px] md:text-[12px] font-bold tracking-[0.2em] uppercase opacity-70">CONTACT US:</span>
 
-              {/* Gap dikurangi dari 6/4 ke gap-2 khusus mobile agar rapat */}
               <div className="flex flex-col md:flex-row gap-2 md:gap-10">
                 <a href="https://wa.me/6285138452566" target="_blank" rel="noopener noreferrer" className="flex items-center gap-3 group !text-white no-underline py-1">
                   <div className="w-8 h-8 flex items-center justify-center bg-white/10 rounded-full group-hover:bg-green-500 transition-all shrink-0">
                     <i className="fa-brands fa-whatsapp text-base text-white"></i>
                   </div>
-                  <span className="text-[11px] md:text-[13px] font-bold tracking-widest uppercase text-white">0851-3845-2566 (AULIA)</span>
+                  <span className="text-[11px] md:text-[13px] font-bold tracking-widest uppercase text-white">0851-3845-2566</span>
                 </a>
 
                 <a href="mailto:AWSM.EVENTORGANIZER@GMAIL.COM" className="flex items-center gap-3 group !text-white no-underline py-1">
@@ -800,7 +778,6 @@ const navLinks = [
           </div>
         </div>
 
-        {/* Copyright Bar */}
         <div className="w-full bg-black text-white/40 text-center py-6 md:py-8 text-[9px] md:text-[11px] tracking-[0.3em] uppercase border-t border-white/5 px-6">
           2026 © PRESENTED BY <span className="font-bold text-white/80">AWSM</span>
         </div>
