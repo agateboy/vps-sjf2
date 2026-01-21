@@ -317,7 +317,7 @@ export default function BeliTiketPage() {
         <div className="modal-dialog modal-dialog-centered mx-auto max-w-lg">
           <div className="modal-content bg-white border-2 border-gray-300 rounded-[30px] overflow-hidden shadow-2xl">
             <div className="modal-header border-none pt-10 px-10 pb-0 flex justify-between items-center text-black">
-              <h5 className="modal-title font-black text-3xl uppercase italic tracking-tighter">Aturan Main</h5>
+              <h5 className="modal-title font-black text-3xl uppercase italic tracking-tighter">Syarat dan Ketentuan</h5>
               <button type="button" className="btn-close scale-110" data-bs-dismiss="modal"></button>
             </div>
             <div className="modal-body p-10 pt-6 text-sm text-gray-800 font-bold leading-relaxed max-h-[60vh] overflow-y-auto">
