@@ -2,6 +2,7 @@
 
 import React, { useState, useEffect, useRef } from 'react';
 import { useRouter } from 'next/navigation';
+import { getSponsorLogoPath } from '@/lib/sponsors';
 
 interface TimeLeft {
   d: string;
@@ -444,14 +445,28 @@ export default function LandingPage() {
             <div className="absolute top-0 left-0 bg-[#5b7c4a] text-white px-6 py-1.5 rounded-t-lg text-[10px] md:text-xs font-bold uppercase z-10 shadow-sm">Special Sponsor</div>
             <div className="bg-[#eeeeee] border border-gray-200 rounded-xl rounded-tl-none p-6 md:p-8 min-h-[160px]">
               <div className="grid grid-cols-4 gap-3">
-                <div className="bg-white rounded-lg shadow-sm flex items-center justify-center p-2 aspect-square">
-                  <img src="/assets/logo.png" alt="logo" className="w-full h-auto object-contain" />
-                </div>
-                {[1, 2, 3].map((i) => (
-                  <div key={i} className="bg-white/50 rounded-lg border-2 border-dashed border-gray-300 flex items-center justify-center aspect-square text-gray-300">
-                    <i className="fas fa-plus"></i>
-                  </div>
-                ))}
+                {[1, 2, 3, 4].map((i) => {
+                  const logoPath = getSponsorLogoPath('sponsors', i);
+                  return (
+                    <div
+                      key={i}
+                      className="bg-white rounded-lg shadow-sm flex items-center justify-center p-2 aspect-square overflow-hidden group relative"
+                    >
+                      <img
+                        src={logoPath}
+                        alt={`sponsor-${i}`}
+                        className="w-full h-auto object-contain group-hover:scale-105 transition-transform duration-300"
+                        onError={(e) => {
+                          (e.target as HTMLImageElement).style.display = 'none';
+                          (e.target as HTMLImageElement).nextElementSibling?.classList.remove('hidden');
+                        }}
+                      />
+                      <div className="hidden absolute inset-0 rounded-lg border-2 border-dashed border-gray-300 flex items-center justify-center text-gray-300 bg-white/50">
+                        <i className="fas fa-plus"></i>
+                      </div>
+                    </div>
+                  );
+                })}
               </div>
             </div>
           </div>
@@ -472,18 +487,28 @@ export default function LandingPage() {
 
           <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-6 gap-3 md:gap-4">
             {isClient &&
-              [...Array(5)].map((_, i) => (
-                <a
-                  key={i}
-                  href="https://wa.me/6285138452566?text=Halo%20Admin,%20kami%20ingin%20mendaftarkan%20komunitas%20kami%20sebagai%20Partner%20di%20Solo%20Japanese%20Fest."
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  title="Tertarik? Ayo Daftar Partner Komunitas"
-                  className="bg-[#f2f2f2] rounded-lg border-b-4 border-gray-300 flex items-center justify-center aspect-square text-gray-400 hover:bg-gray-100 hover:border-[#5b7c4a] hover:text-[#5b7c4a] transition-all active:scale-95 group cursor-pointer"
-                >
-                  <i className="fas fa-plus text-3xl group-hover:scale-110 transition-transform"></i>
-                </a>
-              ))}
+              [...Array(10)].map((_, i) => {
+                const logoPath = getSponsorLogoPath('komunitas', i + 1);
+                return (
+                  <div
+                    key={i}
+                    className="bg-[#f2f2f2] rounded-lg border-b-4 border-gray-300 flex items-center justify-center aspect-square text-gray-400 hover:bg-gray-100 hover:border-[#5b7c4a] hover:text-[#5b7c4a] transition-all active:scale-95 group cursor-pointer overflow-hidden relative"
+                  >
+                    <img
+                      src={logoPath}
+                      alt={`komunitas-${i + 1}`}
+                      className="w-full h-full object-contain p-2 group-hover:scale-105 transition-transform"
+                      onError={(e) => {
+                        (e.target as HTMLImageElement).style.display = 'none';
+                        (e.target as HTMLImageElement).nextElementSibling?.classList.remove('hidden');
+                      }}
+                    />
+                    <div className="hidden absolute inset-0 rounded-lg flex items-center justify-center">
+                      <i className="fas fa-plus text-3xl group-hover:scale-110 transition-transform"></i>
+                    </div>
+                  </div>
+                );
+              })}
             <a
               href="https://wa.me/6285138452566?text=Halo%20Admin,%20kami%20ingin%20mendaftarkan%20komunitas%20kami%20sebagai%20Partner%20di%20Solo%20Japanese%20Fest."
               target="_blank"
@@ -496,19 +521,6 @@ export default function LandingPage() {
                 KOMUNITASMU
               </span>
             </a>
-            {isClient &&
-              [...Array(6)].map((_, i) => (
-                <a
-                  key={i + 5}
-                  href="https://wa.me/6285138452566?text=Halo%20Admin,%20kami%20ingin%20mendaftarkan%20komunitas%20kami%20sebagai%20Partner%20di%20Solo%20Japanese%20Fest."
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  title="Tertarik? Ayo Daftar Partner Komunitas"
-                  className="bg-[#f2f2f2] rounded-lg border-b-4 border-gray-300 flex items-center justify-center aspect-square text-gray-400 hover:bg-gray-100 hover:border-[#5b7c4a] hover:text-[#5b7c4a] transition-all active:scale-95 group cursor-pointer"
-                >
-                  <i className="fas fa-plus text-3xl group-hover:scale-110 transition-transform"></i>
-                </a>
-              ))}
           </div>
         </div>
       </section>
@@ -536,18 +548,28 @@ export default function LandingPage() {
 
           <div className="grid grid-cols-5 md:grid-cols-10 gap-3 md:gap-4">
             {isClient &&
-              [...Array(20)].map((_, i) => (
-                <a
-                  key={i}
-                  href="https://wa.me/6285138452566?text=Halo%20Admin,%20saya%20tertarik%20mendaftar%20sebagai%20Tenant%20FNB/Merch%20di%20Solo%20Japanese%20Fest."
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  title="Tertarik? Ayo Daftar Sebagai Tenant!"
-                  className="bg-[#f8f8f8] rounded-md flex items-center justify-center aspect-square border border-gray-200 text-gray-400 hover:bg-gray-100 hover:border-[#5b7c4a] hover:text-[#5b7c4a] transition-all active:scale-90 group cursor-pointer"
-                >
-                  <i className="fas fa-plus text-xl md:text-2xl group-hover:rotate-90 transition-transform duration-300"></i>
-                </a>
-              ))}
+              [...Array(20)].map((_, i) => {
+                const logoPath = getSponsorLogoPath('fnb', i + 1);
+                return (
+                  <div
+                    key={i}
+                    className="bg-[#f8f8f8] rounded-md flex items-center justify-center aspect-square border border-gray-200 text-gray-400 hover:bg-gray-100 hover:border-[#5b7c4a] hover:text-[#5b7c4a] transition-all active:scale-90 group cursor-pointer overflow-hidden relative"
+                  >
+                    <img
+                      src={logoPath}
+                      alt={`fnb-${i + 1}`}
+                      className="w-full h-full object-contain p-2 group-hover:scale-110 transition-transform duration-300"
+                      onError={(e) => {
+                        (e.target as HTMLImageElement).style.display = 'none';
+                        (e.target as HTMLImageElement).nextElementSibling?.classList.remove('hidden');
+                      }}
+                    />
+                    <div className="hidden absolute inset-0 rounded-md flex items-center justify-center">
+                      <i className="fas fa-plus text-xl md:text-2xl group-hover:rotate-90 transition-transform duration-300"></i>
+                    </div>
+                  </div>
+                );
+              })}
           </div>
         </div>
       </section>
@@ -710,18 +732,28 @@ export default function LandingPage() {
 
           <div className="grid grid-cols-4 sm:grid-cols-6 md:grid-cols-8 gap-3 md:gap-4">
             {isClient &&
-              [...Array(32)].map((_, i) => (
-                <a
-                  key={i}
-                  href="https://wa.me/6285138452566?text=Halo,%20saya%20tertarik%20untuk%20mendaftar%20sebagai%20Media%20Partner."
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className="bg-[#f2f2f2] rounded-lg border-b-4 border-gray-300 flex items-center justify-center aspect-square text-gray-400 hover:bg-gray-100 hover:border-[#b1362f] hover:text-[#b1362f] active:translate-y-1 active:border-b-0 transition-all duration-200 group cursor-pointer"
-                  title="Teratrik? Ayo Daftar Media Partner"
-                >
-                  <i className="fas fa-plus text-xl md:text-2xl group-hover:scale-125 transition-transform duration-300"></i>
-                </a>
-              ))}
+              [...Array(40)].map((_, i) => {
+                const logoPath = getSponsorLogoPath('media-partner', i + 1);
+                return (
+                  <div
+                    key={i}
+                    className="bg-[#f2f2f2] rounded-lg border-b-4 border-gray-300 flex items-center justify-center aspect-square text-gray-400 hover:bg-gray-100 hover:border-[#b1362f] hover:text-[#b1362f] active:translate-y-1 active:border-b-0 transition-all duration-200 group cursor-pointer overflow-hidden relative"
+                  >
+                    <img
+                      src={logoPath}
+                      alt={`media-${i + 1}`}
+                      className="w-full h-full object-contain p-2 group-hover:scale-125 transition-transform duration-300"
+                      onError={(e) => {
+                        (e.target as HTMLImageElement).style.display = 'none';
+                        (e.target as HTMLImageElement).nextElementSibling?.classList.remove('hidden');
+                      }}
+                    />
+                    <div className="hidden absolute inset-0 rounded-lg flex items-center justify-center">
+                      <i className="fas fa-plus text-xl md:text-2xl group-hover:scale-125 transition-transform duration-300"></i>
+                    </div>
+                  </div>
+                );
+              })}
           </div>
         </div>
       </section>
