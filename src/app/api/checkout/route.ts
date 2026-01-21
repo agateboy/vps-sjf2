@@ -29,33 +29,28 @@ export async function POST(req: NextRequest) {
         try {
           console.log(`🔄 Auto-checking payment status untuk ${existing.order_id}...`);
           await updateStatusFromMidtrans(existing);
-          
-          // Re-fetch data setelah update
-          const updated = db.prepare('SELECT * FROM orders WHERE order_id = ?').get(existing.order_id) as any;
-          
-          // Jika berhasil di-sync ke settlement, tolak
-          if (updated.status_bayar === 'settlement') {
-            return NextResponse.json({ 
-              success: false, 
-              message: 'Sudah ada tiket dengan nama dan nomor HP yang sama yang sudah lunas.' 
-            }, { status: 400 });
-          }
-          
-          // Jika sudah berubah ke failed, hapus dan allow re-order
-          if (updated.status_bayar === 'failed') {
-            db.prepare('DELETE FROM orders WHERE order_id = ?').run(existing.order_id);
-            console.log(`✅ Deleted expired order: ${existing.order_id}`);
-          } else {
-            // Masih pending setelah sync - tolak
-            return NextResponse.json({ 
-              success: false, 
-              message: 'Masih ada tiket yang sedang menunggu pembayaran dengan nama dan nomor HP ini. Silakan selesaikan pembayaran atau tunggu hingga expired (15 menit).' 
-            }, { status: 400 });
-          }
         } catch (err) {
           console.warn('⚠️  Failed to sync payment status:', err);
-          // Fallback: cek waktu dibuat
-          const createdTime = new Date(existing.createdAt).getTime();
+        }
+        
+        // Re-fetch data setelah update attempt (berhasil atau gagal)
+        const updated = db.prepare('SELECT * FROM orders WHERE order_id = ?').get(existing.order_id) as any;
+        
+        // Jika berhasil di-sync ke settlement, tolak
+        if (updated.status_bayar === 'settlement') {
+          return NextResponse.json({ 
+            success: false, 
+            message: 'Sudah ada tiket dengan nama dan nomor HP yang sama yang sudah lunas.' 
+          }, { status: 400 });
+        }
+        
+        // Jika sudah berubah ke failed/expired, hapus dan allow re-order
+        if (updated.status_bayar === 'failed') {
+          db.prepare('DELETE FROM orders WHERE order_id = ?').run(existing.order_id);
+          console.log(`✅ Deleted expired/failed order: ${existing.order_id}`);
+        } else {
+          // Masih pending - cek waktu sebagai fallback
+          const createdTime = new Date(updated.createdAt).getTime();
           const nowTime = new Date().getTime();
           const diffMinutes = (nowTime - createdTime) / (1000 * 60);
           
