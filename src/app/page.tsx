@@ -279,8 +279,8 @@ export default function LandingPage() {
                     <span className="text-sm md:text-base font-normal">Presale IDR 40.000</span>
                   </h2>
                 </div>
-                <button className="btn-payment w-full md:w-auto" onClick={() => router.push('/')}>
-                  Coming Soon!!!
+                <button className="btn-payment w-full md:w-auto" onClick={() => router.push('/beli-tiket')}>
+                  BELI SEKARANG!!!
                 </button>
               </div>
             </div>
