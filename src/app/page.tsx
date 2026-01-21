@@ -2,7 +2,7 @@
 
 import React, { useState, useEffect, useRef } from 'react';
 import { useRouter } from 'next/navigation';
-import { getSponsorLogoPath } from '@/lib/sponsors';
+import { getSponsorLogoPath, getSponsorLogoPNG } from '@/lib/sponsors';
 
 interface TimeLeft {
   d: string;
@@ -550,20 +550,24 @@ export default function LandingPage() {
             {isClient &&
               [...Array(20)].map((_, i) => {
                 const logoPath = getSponsorLogoPath('fnb', i + 1);
+                const logoPNG = getSponsorLogoPNG('fnb', i + 1);
                 return (
                   <div
                     key={i}
                     className="bg-[#f8f8f8] rounded-md flex items-center justify-center aspect-square border border-gray-200 text-gray-400 hover:bg-gray-100 hover:border-[#5b7c4a] hover:text-[#5b7c4a] transition-all active:scale-90 group cursor-pointer overflow-hidden relative"
                   >
-                    <img
-                      src={logoPath}
-                      alt={`fnb-${i + 1}`}
-                      className="w-full h-full object-contain p-2 group-hover:scale-110 transition-transform duration-300"
-                      onError={(e) => {
-                        (e.target as HTMLImageElement).style.display = 'none';
-                        (e.target as HTMLImageElement).nextElementSibling?.classList.remove('hidden');
-                      }}
-                    />
+                    <picture>
+                      <source srcSet={logoPath} type="image/webp" />
+                      <img
+                        src={logoPNG}
+                        alt={`fnb-${i + 1}`}
+                        className="w-full h-full object-contain p-2 group-hover:scale-110 transition-transform duration-300"
+                        onError={(e) => {
+                          (e.target as HTMLImageElement).style.display = 'none';
+                          (e.target as HTMLImageElement).nextElementSibling?.classList.remove('hidden');
+                        }}
+                      />
+                    </picture>
                     <div className="hidden absolute inset-0 rounded-md flex items-center justify-center">
                       <i className="fas fa-plus text-xl md:text-2xl group-hover:rotate-90 transition-transform duration-300"></i>
                     </div>
