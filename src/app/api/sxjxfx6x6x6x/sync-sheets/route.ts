@@ -28,8 +28,8 @@ export async function GET(req: NextRequest) {
   try {
     await initializeDatabase();
 
-    // Ambil data yang sudah lunas
-    const orders = await Order.findAll({ where: { status_bayar: 'settlement' } });
+    // Ambil HANYA data yang sudah lunas (settlement)
+    const orders = Order.findAll({ status_bayar: 'settlement' });
 
     if (orders.length === 0) {
       return NextResponse.json({
