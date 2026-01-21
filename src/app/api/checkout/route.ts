@@ -69,12 +69,12 @@ export async function POST(req: NextRequest) {
     const snap = await getMidtransSnap();
 
     let parameter = {
-      transaction_details: { order_id: orderId, gross_amount: 50000 },
+      transaction_details: { order_id: orderId, gross_amount: 40000 },
       customer_details: { 
         first_name: nama, 
         email: email, 
         phone: no_hp,
-        billing_address: { city: asal_kota } // Opsional: kirim kota ke Midtrans
+        billing_address: { city: asal_kota }
       }
     };
 
