@@ -16,7 +16,7 @@ body {
   min-height: 100vh;
   width: 100%;
   background-color: #79b0e1;
-  background-image: url('/assets/NEWBG.png');
+  background-image: url('/assets/NEWBG.webp');
   background-size: cover;
   background-position: right bottom; /* Bangunan di kanan bawah sesuai desain */
   background-attachment: fixed;
