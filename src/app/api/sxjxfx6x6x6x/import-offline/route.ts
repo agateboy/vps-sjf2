@@ -45,6 +45,12 @@ async function createPdfBuffer(order: any): Promise<Buffer> {
 // Helper: Kirim Email
 async function sendTicketEmail(order: any) {
   try {
+    // Validasi email sebelum kirim
+    if (!order.email || order.email.trim() === '') {
+      console.warn(`⚠️  Skipped email send untuk ${order.nama} - email kosong`);
+      return;
+    }
+
     const pdfBuffer = await createPdfBuffer(order);
     await transporter.sendMail({
       from: `"Solo Japanese Festival #2" <${process.env.EMAIL_USER}>`,
@@ -53,8 +59,9 @@ async function sendTicketEmail(order: any) {
       html: `<h3>Halo, ${order.nama}!</h3><p>Terima kasih telah membeli tiket secara offline. Berikut tiket Anda.</p>`,
       attachments: [{ filename: `Tiket-${order.nama}.pdf`, content: pdfBuffer, contentType: 'application/pdf' }],
     });
+    console.log(`✅ Email terkirim ke ${order.email}`);
   } catch (err) {
-    console.error("Gagal kirim email offline:", err);
+    console.error(`❌ Gagal kirim email offline untuk ${order.email}:`, err);
   }
 }
 
@@ -93,7 +100,21 @@ export async function POST(req: NextRequest) {
         continue;
       }
 
-      const [email, nama, jenis_kelamin, no_hp, asal_kota, kategori_usia, sosmed_type, sosmed_username] = cols;
+      const email = cols[0]?.trim() || '';
+      const nama = cols[1]?.trim() || '';
+      const jenis_kelamin = cols[2]?.trim() || '-';
+      const no_hp = cols[3]?.trim() || '';
+      const asal_kota = cols[4]?.trim() || '';
+      const kategori_usia = cols[5]?.trim() || '';
+      const sosmed_type = cols[6]?.trim() || '';
+      const sosmed_username = cols[7]?.trim() || '';
+
+      // Validasi data minimal
+      if (!email || !nama || !no_hp) {
+        console.warn(`⚠️  Skip baris (data tidak lengkap): email=${email}, nama=${nama}, no_hp=${no_hp}`);
+        report.skipped++;
+        continue;
+      }
 
       // Cek Duplikat
       const existing = Order.findOne({ nama, no_hp });
@@ -102,10 +123,12 @@ export async function POST(req: NextRequest) {
         // Jika sudah ada tapi belum lunas, update jadi lunas
         if (existing.status_bayar !== 'settlement') {
           Order.update(existing.order_id, { status_bayar: 'settlement' });
+          console.log(`✅ Updated existing order ke settlement: ${existing.order_id}`);
           report.updated++;
-          // Kirim email (opsional)
-          // sendTicketEmail(existing); 
+          // Kirim email ulang
+          await sendTicketEmail(existing); 
         } else {
+          console.warn(`⏭️  Skip duplikat (sudah settlement): ${nama}`);
           report.skipped++;
         }
       } else {
@@ -127,6 +150,7 @@ export async function POST(req: NextRequest) {
         };
 
         Order.create(newOrderData);
+        console.log(`✅ Created new order: ${orderId}`);
         
         // Kirim Email Tiket
         await sendTicketEmail(newOrderData);
