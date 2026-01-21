@@ -445,7 +445,7 @@ export default function LandingPage() {
             <div className="absolute top-0 left-0 bg-[#5b7c4a] text-white px-6 py-1.5 rounded-t-lg text-[10px] md:text-xs font-bold uppercase z-10 shadow-sm">Special Sponsor</div>
             <div className="bg-[#eeeeee] border border-gray-200 rounded-xl rounded-tl-none p-6 md:p-8 min-h-[160px]">
               <div className="grid grid-cols-4 gap-3">
-                {[1, 2, 3, 4].map((i) => {
+                {[1, 2, 3, 4, 5, 6].map((i) => {
                   const logoPath = getSponsorLogoPath('sponsors', i);
                   return (
                     <div
@@ -720,7 +720,7 @@ export default function LandingPage() {
         style={{
           borderBottomLeftRadius: '35px',
           borderBottomRightRadius: '35px',
-          zIndex: 40,
+          zIndex: 45,
           position: 'relative',
         }}
       >
@@ -736,7 +736,7 @@ export default function LandingPage() {
 
           <div className="grid grid-cols-4 sm:grid-cols-6 md:grid-cols-8 gap-3 md:gap-4">
             {isClient &&
-              [...Array(40)].map((_, i) => {
+              [...Array(45)].map((_, i) => {
                 const logoPath = getSponsorLogoPath('media-partner', i + 1);
                 return (
                   <div
