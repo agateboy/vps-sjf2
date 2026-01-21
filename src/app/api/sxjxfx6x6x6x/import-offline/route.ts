@@ -79,35 +79,61 @@ export async function POST(req: NextRequest) {
 
     if (!csvText) return NextResponse.json({ success: false, message: "Data CSV kosong" });
 
-    const lines = csvText.split('\n');
+    const lines = csvText.split('\n').filter(line => line.trim());
+    if (lines.length < 2) return NextResponse.json({ success: false, message: "CSV minimal 2 baris (header + data)" });
+
     const report = { created: 0, skipped: 0, updated: 0 };
 
-    // Loop setiap baris (Skip header baris pertama jika ada 'email')
-    for (let i = 0; i < lines.length; i++) {
+    // Parse header untuk auto-detect kolom
+    const headerLine = lines[0].trim();
+    const headers = headerLine.split(',').map((h: string) => h.trim().toLowerCase());
+    
+    console.log('📋 Detected headers:', headers);
+
+    // Find index kolom (flexible - case insensitive, partial match)
+    const findColIndex = (keywords: string[]) => {
+      return headers.findIndex(h => keywords.some(k => h.includes(k)));
+    };
+    
+    const colIndex = {
+      email: findColIndex(['email']),
+      nama: findColIndex(['nama']),
+      jenis_kelamin: findColIndex(['jenis_kelamin', 'kelamin', 'gender']),
+      no_hp: findColIndex(['no_hp', 'hp', 'telepon', 'phone']),
+      asal_kota: findColIndex(['asal_kota', 'kota', 'city']),
+      kategori_usia: findColIndex(['kategori_usia', 'usia', 'umur', 'age']),
+      sosmed_type: findColIndex(['sosmed_type', 'media_type', 'platform']),
+      sosmed_username: findColIndex(['sosmed_username', 'username', 'user']),
+    };
+
+    console.log('🔍 Column indices:', colIndex);
+
+    // Validasi kolom required
+    if (colIndex.email === -1 || colIndex.nama === -1 || colIndex.no_hp === -1) {
+      return NextResponse.json({
+        success: false,
+        message: "CSV harus punya kolom: email, nama, no_hp",
+        headers_found: headers,
+        expected_columns: ['email', 'nama', 'no_hp', 'asal_kota/kota', 'kategori_usia/usia', 'sosmed_type', 'sosmed_username']
+      }, { status: 400 });
+    }
+
+    // Loop setiap baris data (mulai dari baris ke-1, skip header)
+    for (let i = 1; i < lines.length; i++) {
       const line = lines[i].trim();
       if (!line) continue;
       
-      // Parse CSV manual (split koma)
-      // Format: email, nama, jenis_kelamin, hp, kota, usia, sosmed_type, sosmed_user
       const cols = line.split(',').map((c: string) => c.trim().replace(/^"|"$/g, ''));
 
-      // Skip header
-      if (cols[0].toLowerCase() === 'email' && cols[1].toLowerCase() === 'nama') continue;
-
-      // Pastikan jumlah kolom cukup (minimal 8)
-      if (cols.length < 8) {
-        report.skipped++;
-        continue;
-      }
-
-      const email = cols[0]?.trim() || '';
-      const nama = cols[1]?.trim() || '';
-      const jenis_kelamin = cols[2]?.trim() || '-';
-      const no_hp = cols[3]?.trim() || '';
-      const asal_kota = cols[4]?.trim() || '';
-      const kategori_usia = cols[5]?.trim() || '';
-      const sosmed_type = cols[6]?.trim() || '';
-      const sosmed_username = cols[7]?.trim() || '';
+      // Extract data berdasarkan column index yang terdeteksi
+      const email = cols[colIndex.email]?.trim() || '';
+      const nama = cols[colIndex.nama]?.trim() || '';
+      const jenis_kelamin = colIndex.jenis_kelamin >= 0 ? (cols[colIndex.jenis_kelamin]?.trim() || '-') : '-';
+      const no_hp = cols[colIndex.no_hp]?.trim() || '';
+      const asal_kota = colIndex.asal_kota >= 0 ? (cols[colIndex.asal_kota]?.trim() || 'Unknown') : 'Unknown';
+      const kategori_usia = colIndex.kategori_usia >= 0 ? (cols[colIndex.kategori_usia]?.trim() || 'Unknown') : 'Unknown';
+      const sosmed_type = colIndex.sosmed_type >= 0 ? (cols[colIndex.sosmed_type]?.trim() || '') : '';
+      const sosmed_username = colIndex.sosmed_username >= 0 ? (cols[colIndex.sosmed_username]?.trim() || '') : '';
 
       // Validasi data minimal
       if (!email || !nama || !no_hp) {
