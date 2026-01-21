@@ -73,8 +73,12 @@ export default function BeliTiketPage() {
       setOrderId(data.order_id);
 
       const script = document.createElement('script');
-      script.src = 'https://app.sandbox.midtrans.com/snap/snap.js';
-      script.setAttribute('data-client-key', 'SB-Mid-client-XXXX');
+      // Use production or sandbox based on environment
+      const isProduction = process.env.NEXT_PUBLIC_MIDTRANS_IS_PRODUCTION === 'true';
+      script.src = isProduction 
+        ? 'https://app.midtrans.com/snap/snap.js'
+        : 'https://app.sandbox.midtrans.com/snap/snap.js';
+      script.setAttribute('data-client-key', process.env.NEXT_PUBLIC_MIDTRANS_CLIENT_KEY || '');
       script.onload = () => {
         if (window.snap) {
           window.snap.pay(data.token, {
