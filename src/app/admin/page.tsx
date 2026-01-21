@@ -11,7 +11,7 @@ declare global {
   }
 }
 
-const SESSION_TIMEOUT = 60 * 60 * 1000; // 1 jam dalam milidetik
+const SESSION_TIMEOUT = 15 * 60 * 1000; // 15 menit dalam milidetik
 
 export default function AdminPage() {
   const [isProcessing, setIsProcessing] = useState(false);
@@ -76,12 +76,12 @@ export default function AdminPage() {
     if (warningTimerRef.current) clearTimeout(warningTimerRef.current);
     setTimeoutWarning(false);
 
-    // Set warning timer (55 menit)
+    // Set warning timer (14 menit - 1 menit sebelum logout)
     warningTimerRef.current = setTimeout(() => {
       setTimeoutWarning(true);
-    }, SESSION_TIMEOUT - (5 * 60 * 1000));
+    }, SESSION_TIMEOUT - (1 * 60 * 1000));
 
-    // Set logout timer (60 menit)
+    // Set logout timer (15 menit)
     inactivityTimerRef.current = setTimeout(() => {
       handleLogout(true);
     }, SESSION_TIMEOUT);
@@ -377,7 +377,7 @@ export default function AdminPage() {
               <div className="flex-1">
                 <strong className="block mb-1">Perhatian!</strong>
                 <p className="text-[12px] md:text-sm opacity-90">
-                  Sesi Anda akan berakhir dalam 5 menit karena tidak ada aktivitas. Silakan lakukan sesuatu untuk melanjutkan.
+                  Sesi Anda akan berakhir dalam 1 menit karena tidak ada aktivitas. Silakan lakukan sesuatu untuk melanjutkan.
                 </p>
               </div>
               <button 
