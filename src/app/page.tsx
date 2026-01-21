@@ -426,9 +426,10 @@ export default function LandingPage() {
         </div>
       </section>
 
-      {/* --- SECTION SPONSOR & PARTNERS --- */}
+      {/* --- SECTION SPONSOR & PARTNERS (2x2 GRID) --- */}
       <section id="sponsor" className="bg-white py-16 md:py-24 px-5 md:px-20">
         <div className="max-w-6xl mx-auto grid grid-cols-1 md:grid-cols-2 gap-8">
+          {/* ROW 1 - PRESENTED BY */}
           <div className="relative pt-6">
             <div className="absolute top-0 left-0 bg-[#b1362f] text-white px-6 py-1.5 rounded-t-lg text-[10px] md:text-xs font-bold uppercase z-10 shadow-sm">Presented By</div>
             <div className="bg-[#eeeeee] border border-gray-200 rounded-xl rounded-tl-none p-8 md:p-12 min-h-[160px] flex items-center justify-center">
@@ -441,11 +442,13 @@ export default function LandingPage() {
               </div>
             </div>
           </div>
+
+          {/* ROW 1 - SPECIAL SPONSOR */}
           <div className="relative pt-6">
             <div className="absolute top-0 left-0 bg-[#5b7c4a] text-white px-6 py-1.5 rounded-t-lg text-[10px] md:text-xs font-bold uppercase z-10 shadow-sm">Special Sponsor</div>
             <div className="bg-[#eeeeee] border border-gray-200 rounded-xl rounded-tl-none p-6 md:p-8 min-h-[160px]">
               <div className="grid grid-cols-4 gap-3">
-                {[1, 2, 3, 4, 5, 6].map((i) => {
+                {[1, 2, 3, 4].map((i) => {
                   const logoPath = getSponsorLogoPath('sponsors', i);
                   return (
                     <div
@@ -470,9 +473,70 @@ export default function LandingPage() {
               </div>
             </div>
           </div>
+
+          {/* ROW 2 - SUPPORTED BY */}
+          <div className="relative pt-6">
+            <div className="absolute top-0 left-0 bg-[#5b7c4a] text-white px-6 py-1.5 rounded-t-lg text-[10px] md:text-xs font-bold uppercase z-10 shadow-sm">Supported By</div>
+            <div className="bg-[#eeeeee] border border-gray-200 rounded-xl rounded-tl-none p-6 md:p-8 min-h-[160px]">
+              <div className="grid grid-cols-4 gap-3">
+                {[1, 2, 3, 4].map((i) => {
+                  const logoPath = getSponsorLogoPath('supported', i);
+                  return (
+                    <div
+                      key={i}
+                      className="bg-white rounded-lg shadow-sm flex items-center justify-center p-2 aspect-square overflow-hidden group relative"
+                    >
+                      <img
+                        src={logoPath}
+                        alt={`supported-${i}`}
+                        className="w-full h-auto object-contain group-hover:scale-105 transition-transform duration-300"
+                        onError={(e) => {
+                          (e.target as HTMLImageElement).style.display = 'none';
+                          (e.target as HTMLImageElement).nextElementSibling?.classList.remove('hidden');
+                        }}
+                      />
+                      <div className="hidden absolute inset-0 rounded-lg border-2 border-dashed border-gray-300 flex items-center justify-center text-gray-300 bg-white/50">
+                        <i className="fas fa-plus"></i>
+                      </div>
+                    </div>
+                  );
+                })}
+              </div>
+            </div>
+          </div>
+
+          {/* ROW 2 - SPONSORSHIP PARTNER */}
+          <div className="relative pt-6">
+            <div className="absolute top-0 left-0 bg-[#b1362f] text-white px-6 py-1.5 rounded-t-lg text-[10px] md:text-xs font-bold uppercase z-10 shadow-sm">Sponsorship Partner</div>
+            <div className="bg-[#eeeeee] border border-gray-200 rounded-xl rounded-tl-none p-6 md:p-8 min-h-[160px]">
+              <div className="grid grid-cols-4 gap-3">
+                {[1, 2, 3, 4].map((i) => {
+                  const logoPath = getSponsorLogoPath('partner', i);
+                  return (
+                    <div
+                      key={i}
+                      className="bg-white rounded-lg shadow-sm flex items-center justify-center p-2 aspect-square overflow-hidden group relative"
+                    >
+                      <img
+                        src={logoPath}
+                        alt={`partner-${i}`}
+                        className="w-full h-auto object-contain group-hover:scale-105 transition-transform duration-300"
+                        onError={(e) => {
+                          (e.target as HTMLImageElement).style.display = 'none';
+                          (e.target as HTMLImageElement).nextElementSibling?.classList.remove('hidden');
+                        }}
+                      />
+                      <div className="hidden absolute inset-0 rounded-lg border-2 border-dashed border-gray-300 flex items-center justify-center text-gray-300 bg-white/50">
+                        <i className="fas fa-plus"></i>
+                      </div>
+                    </div>
+                  );
+                })}
+              </div>
+            </div>
+          </div>
         </div>
       </section>
-
       {/* --- SECTION PARTNER KOMUNITAS --- */}
       <section id="partner" className="bg-white py-16 md:py-24 px-5 md:px-20 border-t border-gray-100">
         <div className="max-w-6xl mx-auto">
@@ -554,22 +618,22 @@ export default function LandingPage() {
                 return (
                   <div
                     key={i}
-                    className="bg-[#f8f8f8] rounded-md flex items-center justify-center aspect-square border border-gray-200 text-gray-400 hover:bg-gray-100 hover:border-[#5b7c4a] hover:text-[#5b7c4a] transition-all active:scale-90 group cursor-pointer overflow-hidden relative"
+                    className="bg-[#f2f2f2] rounded-lg border-b-4 border-gray-300 flex items-center justify-center aspect-square text-gray-400 hover:bg-gray-100 hover:border-[#5b7c4a] hover:text-[#5b7c4a] transition-all active:scale-95 group cursor-pointer overflow-hidden relative"
                   >
                     <picture>
                       <source srcSet={logoPath} type="image/webp" />
                       <img
                         src={logoPNG}
                         alt={`fnb-${i + 1}`}
-                        className="w-full h-full object-contain p-2 group-hover:scale-110 transition-transform duration-300"
+                        className="w-full h-full object-contain p-2 group-hover:scale-105 transition-transform"
                         onError={(e) => {
                           (e.target as HTMLImageElement).style.display = 'none';
                           (e.target as HTMLImageElement).nextElementSibling?.classList.remove('hidden');
                         }}
                       />
                     </picture>
-                    <div className="hidden absolute inset-0 rounded-md flex items-center justify-center">
-                      <i className="fas fa-plus text-xl md:text-2xl group-hover:rotate-90 transition-transform duration-300"></i>
+                    <div className="hidden absolute inset-0 rounded-lg flex items-center justify-center">
+                      <i className="fas fa-plus text-3xl group-hover:scale-110 transition-transform"></i>
                     </div>
                   </div>
                 );
