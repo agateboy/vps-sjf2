@@ -144,9 +144,45 @@ Hindari data loss dengan automatic backup:
 
 ---
 
+---
+
+## 🐛 Bug Kedua: Duplicate Check Tidak Cek Status Pembayaran
+
+### Masalah
+User tidak bisa membeli tiket lagi dengan nama+no_hp yang sama **BAHKAN SETELAH PEMBAYARAN EXPIRED**.
+
+**Skenario:**
+1. User beli tiket → nama "John", no_hp "08123" → status `pending`
+2. User coba beli lagi dengan data sama → **DITOLAK** (duplikat)
+3. 15 menit kemudian → pembayaran expired, status `failed`
+4. User coba beli lagi → **TETAP DITOLAK** (karena nama masih ada di DB)
+5. Solusi sebelumnya: pakai nama/no_hp berbeda
+
+### Solusi yang Sudah Dilakukan
+✅ Update [src/app/api/checkout/route.ts](src/app/api/checkout/route.ts#L26-L50)
+
+**Logika Baru:**
+- ✅ Jika order lama status `settlement` (lunas) → **TOLAK** (true duplicate)
+- ✅ Jika order lama status `pending` → **TOLAK** (masih dalam proses)
+- ✅ Jika order lama status `failed` → **HAPUS order lama, ALLOW re-order** (expired, bisa beli baru)
+
+**Sekarang User Bisa:**
+```
+Pembelian 1: John, 08123 → pending → expired → status failed
+                                                      ↓
+Pembelian 2: John, 08123 → ✅ BERHASIL (order lama dihapus otomatis)
+```
+
+---
+
 ## 📞 Conclusion
 
-Perbaikan sudah dilakukan. **Mohon untuk:**
+Dua perbaikan sudah dilakukan:
+1. ✅ **Sync-sheets bug**: Hanya `settlement` yang sync ke Google Sheet
+2. ✅ **Duplicate check bug**: User bisa re-order setelah pembayaran expired
+
+**Mohon untuk:**
 1. Test dengan order baru yang pending
 2. Verify Google Sheet hanya punya settlement data
-3. Report jika masih ada issue
+3. Test re-order dengan nama+no_hp sama setelah pembayaran expired
+4. Report jika masih ada issue

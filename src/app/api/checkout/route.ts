@@ -19,17 +19,33 @@ export async function POST(req: NextRequest) {
       kategori_usia 
     } = await req.json();
 
-    // Cek Duplikat: nama + no_hp harus unik
-    // Pastikan nama tabel sesuai dengan di database (biasanya 'Orders' atau 'orders')
-    const existing = db.prepare('SELECT * FROM Orders WHERE nama = ? AND no_hp = ?').get(nama, no_hp) as any;
+    // Cek Duplikat: nama + no_hp
+    // Tapi izinkan re-order jika order sebelumnya sudah failed/expired
+    const existing = db.prepare('SELECT * FROM orders WHERE nama = ? AND no_hp = ?').get(nama, no_hp) as any;
     
     if (existing) {
-      // Opsional: Bisa ditambahkan cek status_bayar. Jika 'failed'/'expire' mungkin boleh daftar lagi.
-      // Tapi untuk saat ini kita ikuti aturan "Nama & HP harus beda".
-      return NextResponse.json({ 
-        success: false, 
-        message: 'Sudah ada tiket dengan nama dan nomor HP yang sama. Mohon gunakan data yang berbeda.' 
-      }, { status: 400 });
+      // Jika ada order dengan nama+hp sama, cek statusnya
+      if (existing.status_bayar === 'settlement') {
+        // Sudah lunas - tidak boleh duplicate
+        return NextResponse.json({ 
+          success: false, 
+          message: 'Sudah ada tiket dengan nama dan nomor HP yang sama yang sudah lunas.' 
+        }, { status: 400 });
+      }
+      
+      if (existing.status_bayar === 'pending') {
+        // Masih pending (belum selesai) - tidak boleh, suruh tungggu atau coba lagi nanti
+        return NextResponse.json({ 
+          success: false, 
+          message: 'Masih ada tiket yang sedang menunggu pembayaran dengan nama dan nomor HP ini. Silakan selesaikan pembayaran atau tunggu hingga expired (15 menit).' 
+        }, { status: 400 });
+      }
+      
+      // Jika status 'failed' atau status lainnya, boleh beli lagi (delete order lama)
+      if (existing.status_bayar === 'failed') {
+        db.prepare('DELETE FROM orders WHERE order_id = ?').run(existing.order_id);
+        console.log(`Deleted expired order: ${existing.order_id}`);
+      }
     }
     
     const orderId = `SJF2-${Date.now()}`;
