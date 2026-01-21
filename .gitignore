@@ -44,3 +44,7 @@ next-env.d.ts
 
 google-credentials.json
 google-credentials.json*
+
+# local database
+database.sqlite
+

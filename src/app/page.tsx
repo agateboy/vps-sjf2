@@ -130,7 +130,7 @@ export default function LandingPage() {
   return (
     <div className="w-full overflow-x-hidden">
       {/* Head removed: Gunakan Metadata API di layout.tsx jika butuh title/meta */}
-      
+
       {/* --- HERO SECTION --- */}
       <section id="hero" className="hero-section relative w-full overflow-hidden bg-black">
         <div className="relative z-[100] flex flex-col min-h-screen text-white">
@@ -149,7 +149,6 @@ export default function LandingPage() {
               <nav className="hidden md:flex items-center gap-8">
                 {navLinks.map((link, index) => (
                   <div key={link.name} className="relative group/link" onMouseEnter={() => link.dropdown && setIsPartnerOpen(true)} onMouseLeave={() => link.dropdown && setIsPartnerOpen(false)}>
-                    {/* PERBAIKAN: ClassName dibuat satu baris string & href diberi fallback */}
                     <a
                       href={link.href || '#'}
                       style={{
@@ -195,12 +194,7 @@ export default function LandingPage() {
                         <span className="text-lg font-bold uppercase tracking-[0.15em] text-white/50 block py-1">{link.name}</span>
                         <div className="flex flex-col items-center gap-4 mt-2">
                           {link.dropdown.map((sub) => (
-                            <a
-                              key={sub.name}
-                              href={sub.href}
-                              onClick={() => setIsMenuOpen(false)}
-                              className="text-base font-bold uppercase tracking-[0.1em] text-white hover:text-[#3b82f6] transition-all"
-                            >
+                            <a key={sub.name} href={sub.href} onClick={() => setIsMenuOpen(false)} className="text-base font-bold uppercase tracking-[0.1em] text-white hover:text-[#3b82f6] transition-all">
                               {sub.name}
                             </a>
                           ))}
@@ -426,46 +420,45 @@ export default function LandingPage() {
         </div>
       </section>
 
-      {/* --- SECTION SPONSOR & PARTNERS (2x2 GRID) --- */}
-      <section id="sponsor" className="bg-white py-16 md:py-24 px-5 md:px-20">
-        <div className="max-w-6xl mx-auto grid grid-cols-1 md:grid-cols-2 gap-8">
+      {/* --- SECTION SPONSOR & PARTNERS (2x2 GRID OPTIMIZED) --- */}
+      <section id="sponsor" className="bg-white py-4 md:py-10 px-2 md:px-20">
+        {/* Menggunakan grid-cols-2 di mobile agar lebih compact di WebView */}
+        <div className="max-w-5xl mx-auto grid grid-cols-2 md:grid-cols-2 gap-2 md:gap-4">
           {/* ROW 1 - PRESENTED BY */}
-          <div className="relative pt-6">
-            <div className="absolute top-0 left-0 bg-[#b1362f] text-white px-6 py-1.5 rounded-t-lg text-[10px] md:text-xs font-bold uppercase z-10 shadow-sm">Presented By</div>
-            <div className="bg-[#eeeeee] border border-gray-200 rounded-xl rounded-tl-none p-8 md:p-12 min-h-[160px] flex items-center justify-center">
-              <div className="flex items-center gap-4 grayscale brightness-0 opacity-70">
-                <img src="/assets/logo.png" alt="AWSM" className="w-12 h-12 md:w-16 md:h-16 object-contain" />
-                <div className="text-gray-700 leading-tight">
-                  <span className="block font-black text-lg md:text-xl uppercase">AWSM</span>
-                  <span className="text-xs md:text-sm font-bold opacity-60 uppercase">Event Organizer</span>
+          {/* Interaktif: Added hover:shadow-md & transition */}
+          <div className="relative pt-3 group transition-all duration-300 hover:-translate-y-1">
+            <div className="absolute top-0 left-0 bg-[#b1362f] text-white px-2 py-0.5 rounded-t-md text-[8px] md:text-xs font-bold uppercase z-10 shadow-sm">Presented By</div>
+            <div className="bg-[#eeeeee] border border-gray-200 rounded-lg rounded-tl-none p-2 md:p-6 min-h-[60px] md:min-h-[110px] flex items-center justify-center transition-colors group-hover:border-[#b1362f]/30">
+              <div className="flex items-center gap-1.5 grayscale brightness-0 opacity-70 group-hover:grayscale-0  group-hover:opacity-100 transition-all duration-500">
+                <img src="/assets/logo.png" alt="AWSM" className="w-6 h-6 md:w-12 md:h-12 object-contain" />
+                <div className="text-gray-700 leading-none">
+                  <span className="block font-black text-[10px] md:text-lg uppercase">AWSM</span>
+                  <span className="text-[7px] md:text-[11px] font-bold opacity-60 uppercase">Organizer</span>
                 </div>
               </div>
             </div>
           </div>
 
           {/* ROW 1 - SPECIAL SPONSOR */}
-          <div className="relative pt-6">
-            <div className="absolute top-0 left-0 bg-[#5b7c4a] text-white px-6 py-1.5 rounded-t-lg text-[10px] md:text-xs font-bold uppercase z-10 shadow-sm">Special Sponsor</div>
-            <div className="bg-[#eeeeee] border border-gray-200 rounded-xl rounded-tl-none p-6 md:p-8 min-h-[160px]">
-              <div className="grid grid-cols-4 gap-3">
+          <div className="relative pt-3 transition-all duration-300 hover:-translate-y-1">
+            <div className="absolute top-0 left-0 bg-[#5b7c4a] text-white px-2 py-0.5 rounded-t-md text-[8px] md:text-xs font-bold uppercase z-10 shadow-sm">Special Sponsor</div>
+            <div className="bg-[#eeeeee] border border-gray-200 rounded-lg rounded-tl-none p-2 md:p-4 min-h-[60px] md:min-h-[110px] flex items-center">
+              <div className="grid grid-cols-4 gap-1 w-full">
                 {[1, 2, 3, 4].map((i) => {
                   const logoPath = getSponsorLogoPath('sponsors', i);
                   return (
-                    <div
-                      key={i}
-                      className="bg-white rounded-lg shadow-sm flex items-center justify-center p-2 aspect-square overflow-hidden group relative"
-                    >
+                    <div key={i} className="bg-white rounded shadow-sm flex items-center justify-center p-0.5 aspect-square overflow-hidden hover:scale-110 hover:shadow-lg transition-transform duration-200 cursor-pointer">
                       <img
                         src={logoPath}
                         alt={`sponsor-${i}`}
-                        className="w-full h-auto object-contain group-hover:scale-105 transition-transform duration-300"
+                        className="w-full h-auto object-contain"
                         onError={(e) => {
                           (e.target as HTMLImageElement).style.display = 'none';
                           (e.target as HTMLImageElement).nextElementSibling?.classList.remove('hidden');
                         }}
                       />
-                      <div className="hidden absolute inset-0 rounded-lg border-2 border-dashed border-gray-300 flex items-center justify-center text-gray-300 bg-white/50">
-                        <i className="fas fa-plus"></i>
+                      <div className="hidden absolute inset-0 text-gray-300 flex items-center justify-center">
+                        <i className="fas fa-plus text-[6px]"></i>
                       </div>
                     </div>
                   );
@@ -475,29 +468,23 @@ export default function LandingPage() {
           </div>
 
           {/* ROW 2 - SUPPORTED BY */}
-          <div className="relative pt-6">
-            <div className="absolute top-0 left-0 bg-[#5b7c4a] text-white px-6 py-1.5 rounded-t-lg text-[10px] md:text-xs font-bold uppercase z-10 shadow-sm">Supported By</div>
-            <div className="bg-[#eeeeee] border border-gray-200 rounded-xl rounded-tl-none p-6 md:p-8 min-h-[160px]">
-              <div className="grid grid-cols-4 gap-3">
+          <div className="relative pt-3 transition-all duration-300 hover:-translate-y-1">
+            <div className="absolute top-0 left-0 bg-[#5b7c4a] text-white px-2 py-0.5 rounded-t-md text-[8px] md:text-xs font-bold uppercase z-10 shadow-sm">Supported By</div>
+            <div className="bg-[#eeeeee] border border-gray-200 rounded-lg rounded-tl-none p-2 md:p-4 min-h-[60px] md:min-h-[110px] flex items-center">
+              <div className="grid grid-cols-4 gap-1 w-full">
                 {[1, 2, 3, 4].map((i) => {
                   const logoPath = getSponsorLogoPath('supported', i);
                   return (
-                    <div
-                      key={i}
-                      className="bg-white rounded-lg shadow-sm flex items-center justify-center p-2 aspect-square overflow-hidden group relative"
-                    >
+                    <div key={i} className="bg-white rounded shadow-sm flex items-center justify-center p-0.5 aspect-square overflow-hidden hover:scale-110 hover:shadow-lg transition-transform duration-200 cursor-pointer">
                       <img
                         src={logoPath}
                         alt={`supported-${i}`}
-                        className="w-full h-auto object-contain group-hover:scale-105 transition-transform duration-300"
+                        className="w-full h-auto object-contain"
                         onError={(e) => {
                           (e.target as HTMLImageElement).style.display = 'none';
                           (e.target as HTMLImageElement).nextElementSibling?.classList.remove('hidden');
                         }}
                       />
-                      <div className="hidden absolute inset-0 rounded-lg border-2 border-dashed border-gray-300 flex items-center justify-center text-gray-300 bg-white/50">
-                        <i className="fas fa-plus"></i>
-                      </div>
                     </div>
                   );
                 })}
@@ -506,29 +493,23 @@ export default function LandingPage() {
           </div>
 
           {/* ROW 2 - SPONSORSHIP PARTNER */}
-          <div className="relative pt-6">
-            <div className="absolute top-0 left-0 bg-[#b1362f] text-white px-6 py-1.5 rounded-t-lg text-[10px] md:text-xs font-bold uppercase z-10 shadow-sm">Sponsorship Partner</div>
-            <div className="bg-[#eeeeee] border border-gray-200 rounded-xl rounded-tl-none p-6 md:p-8 min-h-[160px]">
-              <div className="grid grid-cols-4 gap-3">
+          <div className="relative pt-3 transition-all duration-300 hover:-translate-y-1">
+            <div className="absolute top-0 left-0 bg-[#b1362f] text-white px-2 py-0.5 rounded-t-md text-[8px] md:text-xs font-bold uppercase z-10 shadow-sm">Sponsorship</div>
+            <div className="bg-[#eeeeee] border border-gray-200 rounded-lg rounded-tl-none p-2 md:p-4 min-h-[60px] md:min-h-[110px] flex items-center">
+              <div className="grid grid-cols-4 gap-1 w-full">
                 {[1, 2, 3, 4].map((i) => {
                   const logoPath = getSponsorLogoPath('partner', i);
                   return (
-                    <div
-                      key={i}
-                      className="bg-white rounded-lg shadow-sm flex items-center justify-center p-2 aspect-square overflow-hidden group relative"
-                    >
+                    <div key={i} className="bg-white rounded shadow-sm flex items-center justify-center p-0.5 aspect-square overflow-hidden hover:scale-110 hover:shadow-lg transition-transform duration-200 cursor-pointer">
                       <img
                         src={logoPath}
                         alt={`partner-${i}`}
-                        className="w-full h-auto object-contain group-hover:scale-105 transition-transform duration-300"
+                        className="w-full h-auto object-contain"
                         onError={(e) => {
                           (e.target as HTMLImageElement).style.display = 'none';
                           (e.target as HTMLImageElement).nextElementSibling?.classList.remove('hidden');
                         }}
                       />
-                      <div className="hidden absolute inset-0 rounded-lg border-2 border-dashed border-gray-300 flex items-center justify-center text-gray-300 bg-white/50">
-                        <i className="fas fa-plus"></i>
-                      </div>
                     </div>
                   );
                 })}
@@ -537,52 +518,54 @@ export default function LandingPage() {
           </div>
         </div>
       </section>
-      {/* --- SECTION PARTNER KOMUNITAS --- */}
-      <section id="partner" className="bg-white py-16 md:py-24 px-5 md:px-20 border-t border-gray-100">
+      {/* --- SECTION PARTNER KOMUNITAS--- */}
+      <section id="partner" className="bg-white py-10 md:py-16 px-5 md:px-20 border-t border-gray-100">
         <div className="max-w-6xl mx-auto">
           <div className="flex flex-col md:flex-row items-center justify-center gap-x-4 mb-8 text-center">
-            <h2 className="font-black tracking-tighter" style={{ color: '#5b7c4a', fontFamily: '"Arial Black", sans-serif', fontSize: 'clamp(40px, 7vw, 72px)' }}>
+            <h2 className="font-black tracking-tighter" style={{ color: '#5b7c4a', fontFamily: '"Arial Black", sans-serif', fontSize: 'clamp(32px, 5vw, 48px)' }}>
               PARTNER
             </h2>
-            <h2 className="font-black tracking-tighter" style={{ color: '#b1362f', fontFamily: '"Arial Black", sans-serif', fontSize: 'clamp(40px, 7vw, 72px)' }}>
+            <h2 className="font-black tracking-tighter" style={{ color: '#b1362f', fontFamily: '"Arial Black", sans-serif', fontSize: 'clamp(32px, 5vw, 48px)' }}>
               KOMUNITAS
             </h2>
           </div>
 
-          <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-6 gap-3 md:gap-4">
+          <div className="grid grid-cols-4 sm:grid-cols-6 md:grid-cols-8 gap-3 md:gap-4">
             {isClient &&
               [...Array(10)].map((_, i) => {
                 const logoPath = getSponsorLogoPath('komunitas', i + 1);
                 return (
                   <div
                     key={i}
-                    className="bg-[#f2f2f2] rounded-lg border-b-4 border-gray-300 flex items-center justify-center aspect-square text-gray-400 hover:bg-gray-100 hover:border-[#5b7c4a] hover:text-[#5b7c4a] transition-all active:scale-95 group cursor-pointer overflow-hidden relative"
+                    className="bg-[#f2f2f2] rounded-lg border-b-4 border-gray-300 flex items-center justify-center aspect-square text-gray-400 hover:bg-gray-100 hover:border-[#5b7c4a] hover:text-[#5b7c4a] active:translate-y-1 active:border-b-0 transition-all duration-200 group cursor-pointer overflow-hidden relative"
                   >
                     <img
                       src={logoPath}
                       alt={`komunitas-${i + 1}`}
-                      className="w-full h-full object-contain p-2 group-hover:scale-105 transition-transform"
+                      className="w-full h-full object-contain p-2 group-hover:scale-125 transition-transform duration-300"
                       onError={(e) => {
                         (e.target as HTMLImageElement).style.display = 'none';
                         (e.target as HTMLImageElement).nextElementSibling?.classList.remove('hidden');
                       }}
                     />
                     <div className="hidden absolute inset-0 rounded-lg flex items-center justify-center">
-                      <i className="fas fa-plus text-3xl group-hover:scale-110 transition-transform"></i>
+                      <i className="fas fa-plus text-xl group-hover:scale-125 transition-transform duration-300"></i>
                     </div>
                   </div>
                 );
               })}
+
+            {/* Tombol pendaftaran dengan style yang sama persis agar seragam */}
             <a
               href="https://wa.me/6285138452566?text=Halo%20Admin,%20kami%20ingin%20mendaftarkan%20komunitas%20kami%20sebagai%20Partner%20di%20Solo%20Japanese%20Fest."
               target="_blank"
               rel="noopener noreferrer"
-              className="bg-[#b1362f] rounded-lg border-b-4 border-[#8e2a24] flex items-center justify-center aspect-square shadow-md hover:brightness-110 active:scale-95 transition-all p-4 text-center cursor-pointer"
+              className="bg-[#b1362f] rounded-lg border-b-4 border-[#8e2a24] flex items-center justify-center aspect-square shadow-md hover:brightness-110 active:translate-y-1 active:border-b-0 transition-all duration-200 p-2 text-center cursor-pointer"
             >
-              <span className="text-white font-black leading-none uppercase" style={{ fontSize: 'clamp(11px, 2vw, 16px)' }}>
+              <span className="text-white font-black leading-[1.1] uppercase" style={{ fontSize: 'clamp(8px, 1.5vw, 11px)' }}>
                 DAFTARKAN
                 <br />
-                KOMUNITASMU
+                KOMUNITAS
               </span>
             </a>
           </div>
