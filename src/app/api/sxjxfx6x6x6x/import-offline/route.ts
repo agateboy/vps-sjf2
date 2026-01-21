@@ -16,29 +16,44 @@ const transporter = nodemailer.createTransport({
 
 // Helper: Buat PDF (Versi Ringkas untuk Offline)
 async function createPdfBuffer(order: any): Promise<Buffer> {
-  return new Promise(async (resolve) => {
-    const doc = new PDFDocument({ size: [300, 600], margin: 0 });
-    const buffers: Buffer[] = [];
-    doc.on('data', buffers.push.bind(buffers));
-    doc.on('end', () => resolve(Buffer.concat(buffers)));
+  return new Promise((resolve, reject) => {
+    try {
+      const doc = new PDFDocument({ size: [300, 600], margin: 0 });
+      const buffers: Buffer[] = [];
+      
+      doc.on('data', (chunk) => buffers.push(chunk));
+      doc.on('end', () => {
+        try {
+          resolve(Buffer.concat(buffers));
+        } catch (err) {
+          reject(err);
+        }
+      });
+      doc.on('error', reject);
 
-    // Background Biru
-    doc.rect(0, 0, 300, 600).fill('#87CEEB'); 
-    doc.save().moveTo(0, 0).lineTo(300, 0).lineTo(300, 390).lineTo(150, 425).lineTo(0, 390).lineTo(0, 0).fill('#ffffff').restore();
+      // Background Biru
+      doc.rect(0, 0, 300, 600).fill('#87CEEB'); 
+      doc.save().moveTo(0, 0).lineTo(300, 0).lineTo(300, 390).lineTo(150, 425).lineTo(0, 390).lineTo(0, 0).fill('#ffffff').restore();
 
-    doc.font('Helvetica-Bold').fontSize(30).fillColor('#0e2a47').text('E-TICKET', 0, 260, { align: 'center' });
-    
-    // QR Code
-    const qrData = await QRCode.toDataURL(order.order_id, { margin: 1, width: 150 });
-    doc.image(qrData, 75, 90, { width: 150 });
+      doc.font('Helvetica-Bold').fontSize(30).fillColor('#0e2a47').text('E-TICKET', 0, 260, { align: 'center' });
+      
+      // QR Code - Generate QR synchronously
+      QRCode.toDataURL(order.order_id, { margin: 1, width: 150 })
+        .then(qrData => {
+          doc.image(qrData, 75, 90, { width: 150 });
 
-    // Detail Text
-    doc.font('Helvetica-Bold').fontSize(10).fillColor('#333333');
-    doc.text(`ID: ${order.order_id}`, 30, 460);
-    doc.text(`Nama: ${order.nama}`, 30, 480);
-    doc.text(`Status: LUNAS (OFFLINE)`, 30, 500);
+          // Detail Text
+          doc.font('Helvetica-Bold').fontSize(10).fillColor('#333333');
+          doc.text(`ID: ${order.order_id}`, 30, 460);
+          doc.text(`Nama: ${order.nama}`, 30, 480);
+          doc.text(`Status: LUNAS (OFFLINE)`, 30, 500);
 
-    doc.end();
+          doc.end();
+        })
+        .catch(reject);
+    } catch (err) {
+      reject(err);
+    }
   });
 }
 
@@ -52,6 +67,12 @@ async function sendTicketEmail(order: any) {
     }
 
     const pdfBuffer = await createPdfBuffer(order);
+    
+    if (!pdfBuffer || pdfBuffer.length === 0) {
+      console.error(`❌ PDF buffer kosong untuk ${order.email}`);
+      return;
+    }
+
     await transporter.sendMail({
       from: `"Solo Japanese Festival #2" <${process.env.EMAIL_USER}>`,
       to: order.email,
