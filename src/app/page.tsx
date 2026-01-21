@@ -607,7 +607,7 @@ export default function LandingPage() {
       {/* --- SECTION DENAH --- */}
       <section id="denah" className="w-full relative bg-[#ffffff] pt-6 md:pt-20 pb-0">
         <div className="absolute top-20 left-10 z-20 bg-white/80 backdrop-blur-md p-4 rounded-2xl shadow-xl hidden md:block">
-          <h2 className="font-black text-[#b1362f] text-2xl">DENAH DESA SHINOBI</h2>
+          <h2 className="font-black text-black text-2xl">DENAH DESA SHINOBI</h2>
           <p className="text-xs text-gray-600 font-bold">SOLO JAPANESE FESTIVAL #2</p>
         </div>
 
