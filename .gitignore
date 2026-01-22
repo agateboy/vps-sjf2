@@ -45,6 +45,13 @@ next-env.d.ts
 google-credentials.json
 google-credentials.json*
 
-# local database
+# --- SQLite Database ---
 database.sqlite
+*.sqlite
 
+# --- SQLite Temporary/Journal Files (PENTING!) ---
+# File ini muncul otomatis saat aplikasi jalan, jangan di-upload.
+database.sqlite-wal
+database.sqlite-shm
+*.sqlite-wal
+*.sqlite-shm
