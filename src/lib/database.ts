@@ -22,19 +22,32 @@ db.exec(`
     sosmed_username TEXT NOT NULL,
     status_bayar TEXT DEFAULT 'pending',
     status_tiket TEXT DEFAULT 'belum_masuk',
+    payment_method TEXT,
+    qris_image TEXT,
+    snap_token TEXT,
     createdAt DATETIME DEFAULT CURRENT_TIMESTAMP,
     updatedAt DATETIME DEFAULT CURRENT_TIMESTAMP
   );
 `);
 
-// 2. AUTO MIGRATION: Tambahkan kolom jenis_kelamin jika belum ada (untuk DB lama)
+// 2. AUTO MIGRATION: Tambahkan kolom payment_method, qris_image, dan snap_token jika belum ada (untuk DB lama)
 try {
   const columns = db.prepare("PRAGMA table_info(orders)").all() as any[];
-  const hasGender = columns.some(col => col.name === 'jenis_kelamin');
+  const hasPaymentMethod = columns.some(col => col.name === 'payment_method');
+  const hasQrisImage = columns.some(col => col.name === 'qris_image');
+  const hasSnapToken = columns.some(col => col.name === 'snap_token');
   
-  if (!hasGender) {
-    console.log("Migrating database: Adding column 'jenis_kelamin'...");
-    db.prepare("ALTER TABLE orders ADD COLUMN jenis_kelamin TEXT").run();
+  if (!hasPaymentMethod) {
+    console.log("Migrating database: Adding column 'payment_method'...");
+    db.prepare("ALTER TABLE orders ADD COLUMN payment_method TEXT").run();
+  }
+  if (!hasQrisImage) {
+    console.log("Migrating database: Adding column 'qris_image'...");
+    db.prepare("ALTER TABLE orders ADD COLUMN qris_image TEXT").run();
+  }
+  if (!hasSnapToken) {
+    console.log("Migrating database: Adding column 'snap_token'...");
+    db.prepare("ALTER TABLE orders ADD COLUMN snap_token TEXT").run();
   }
 } catch (error) {
   console.error("Migration warning:", error);
@@ -48,19 +61,22 @@ export const Order = {
     nama: string;
     email: string;
     no_hp: string;
-    jenis_kelamin: string; // <--- BARU
+    jenis_kelamin: string;
     asal_kota: string;
     kategori_usia: string;
     sosmed_type: string;
     sosmed_username: string;
-    status_bayar?: string; // Optional
+    status_bayar?: string;
+    payment_method?: string;
+    qris_image?: string;
+    snap_token?: string;
   }) => {
     const stmt = db.prepare(`
       INSERT INTO orders (
         order_id, nama, email, no_hp, jenis_kelamin, 
-        asal_kota, kategori_usia, sosmed_type, sosmed_username, status_bayar
+        asal_kota, kategori_usia, sosmed_type, sosmed_username, status_bayar, payment_method, qris_image, snap_token
       )
-      VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+      VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
     `);
     
     return stmt.run(
@@ -68,12 +84,15 @@ export const Order = {
       data.nama,
       data.email,
       data.no_hp,
-      data.jenis_kelamin, // <--- BARU
+      data.jenis_kelamin,
       data.asal_kota,
       data.kategori_usia,
       data.sosmed_type,
       data.sosmed_username,
-      data.status_bayar || 'pending'
+      data.status_bayar || 'pending',
+      data.payment_method || null,
+      data.qris_image || null,
+      data.snap_token || null
     );
   },
 

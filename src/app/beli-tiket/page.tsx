@@ -72,36 +72,54 @@ export default function BeliTiketPage() {
 
       setOrderId(data.order_id);
 
+      // Load SNAP script
       const script = document.createElement('script');
-      // Use production or sandbox based on environment
       const isProduction = process.env.NEXT_PUBLIC_MIDTRANS_IS_PRODUCTION === 'true';
       script.src = isProduction 
         ? 'https://app.midtrans.com/snap/snap.js'
         : 'https://app.sandbox.midtrans.com/snap/snap.js';
       script.setAttribute('data-client-key', process.env.NEXT_PUBLIC_MIDTRANS_CLIENT_KEY || '');
+      script.async = true;
+      
       script.onload = () => {
         if (window.snap) {
           window.snap.pay(data.token, {
             onSuccess: () => {
+              console.log('Payment success');
+              setLoading(false);
+              // Redirect to checkout page after success
               setTimeout(() => {
-                setShowResult(true);
-                setLoading(false);
-              }, 3000);
+                window.location.href = `/checkout/${data.order_id}`;
+              }, 1500);
             },
             onPending: () => {
+              console.log('Payment pending');
               setLoading(false);
-              alert('Pembayaran menunggu...');
+              // Redirect to checkout page to show pending status
+              setTimeout(() => {
+                window.location.href = `/checkout/${data.order_id}`;
+              }, 1500);
             },
             onError: () => {
+              console.log('Payment error');
               setLoading(false);
-              alert('Pembayaran gagal!');
+              alert('Pembayaran gagal. Silakan coba lagi.');
             },
             onClose: () => {
+              console.log('Customer closed the popup');
               setLoading(false);
-            },
+              // Stay on form page if user close popup
+            }
           });
         }
       };
+      
+      script.onerror = () => {
+        console.error('Failed to load SNAP script');
+        setLoading(false);
+        alert('Gagal memuat payment gateway. Silakan coba lagi.');
+      };
+      
       document.body.appendChild(script);
     } catch (error) {
       alert(error.message || 'Terjadi kesalahan');
