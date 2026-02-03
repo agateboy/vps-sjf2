@@ -1,6 +1,7 @@
 'use client';
 
 import React, { useState, useEffect } from 'react';
+import { CityAutocomplete } from '@/components/CityAutocomplete';
 
 // Extend window type for Midtrans Snap
 declare global {
@@ -257,7 +258,12 @@ export default function BeliTiketPage() {
 
               <div className="space-y-1">
                 <label className={labelStyle}>Asal Kota</label>
-                <input type="text" name="asal_kota" required value={formData.asal_kota} onChange={handleInputChange} className={inputStyle} placeholder="Contoh: Surakarta" />
+                <CityAutocomplete
+                  value={formData.asal_kota}
+                  onChange={(value) => setFormData({ ...formData, asal_kota: value })}
+                  placeholder="Ketik nama kota..."
+                  inputStyle={inputStyle}
+                />
               </div>
 
               <div className="grid grid-cols-5 gap-3 items-end">
