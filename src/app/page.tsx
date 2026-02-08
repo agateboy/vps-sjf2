@@ -113,6 +113,36 @@ export default function LandingPage() {
     return () => window.removeEventListener('scroll', handleScroll);
   }, []);
 
+  useEffect(() => {
+    if (typeof window === 'undefined' || !('IntersectionObserver' in window)) {
+      return;
+    }
+
+    const elements = Array.from(document.querySelectorAll<HTMLElement>('[data-lazy-observe]'));
+    if (!elements.length) {
+      return;
+    }
+
+    const observer = new IntersectionObserver(
+      (entries) => {
+        entries.forEach((entry) => {
+          if (!entry.isIntersecting) return;
+          const target = entry.target as HTMLElement;
+          target.classList.add('is-visible');
+          const lazyBg = target.dataset.lazyBg;
+          if (lazyBg && !target.style.backgroundImage) {
+            target.style.backgroundImage = `url('${lazyBg}')`;
+          }
+          observer.unobserve(target);
+        });
+      },
+      { rootMargin: '200px 0px' }
+    );
+
+    elements.forEach((el) => observer.observe(el));
+    return () => observer.disconnect();
+  }, []);
+
   const navLinks = [
     { name: 'Beranda', href: '#hero' },
     { name: 'Desa Shinobi', href: '#kartuID' },
@@ -285,7 +315,7 @@ export default function LandingPage() {
       {/* --- SECTION DESA SHINOBHI --- */}
       <section
         id="kartuID"
-        className="relative bg-white py-10 md:py-32 px-5 md:px-20 overflow-hidden"
+        className="lazy-section relative bg-white py-10 md:py-32 px-5 md:px-20 overflow-hidden"
         style={{
           marginTop: '-35px',
           borderTopLeftRadius: '35px',
@@ -318,14 +348,14 @@ export default function LandingPage() {
           </div>
           <div className="w-full lg:w-[50%] flex justify-center lg:justify-end mt-4 lg:mt-0">
             <div className="relative w-full max-w-[260px] md:max-w-[500px] lg:max-w-[550px]">
-              <img src="/assets/Group 591.png" alt="Kartu Identitas" className="w-full h-auto drop-shadow-2xl hover:scale-105 transition-transform duration-500" />
+              <img src="/assets/Group 591.png" alt="Kartu Identitas" className="w-full h-auto drop-shadow-2xl hover:scale-105 transition-transform duration-500" loading="lazy" decoding="async" />
             </div>
           </div>
         </div>
       </section>
 
       {/* --- SECTION KARTU MISI --- */}
-      <section id="misi" className="misi-section min-h-[500px] md:min-h-[700px] flex items-center justify-center relative overflow-hidden py-10 md:py-16">
+      <section id="misi" className="lazy-section misi-section min-h-[500px] md:min-h-[700px] flex items-center justify-center relative overflow-hidden py-10 md:py-16" data-lazy-observe data-lazy-bg="/assets/Group-496.png">
         <div className="w-full max-w-5xl px-[18%] md:px-20 lg:px-32 flex flex-col items-center md:items-start">
           <h2
             className="font-[900] uppercase mb-6 md:mb-12 tracking-tight text-center md:text-left w-full"
@@ -377,7 +407,7 @@ export default function LandingPage() {
       </section>
 
       {/* --- SECTION AKTIVITAS --- */}
-      <section id="aktivitas" className=" bg-white py-16 md:py-24 px-5 md:px-20">
+      <section id="aktivitas" className="lazy-section bg-white py-16 md:py-24 px-5 md:px-20">
         <div className="max-w-6xl mx-auto flex flex-col lg:flex-row gap-10 items-start">
           <div className="w-full lg:w-[35%]">
             <div className="rounded-3xl p-6 md:p-8 text-white shadow-2xl relative overflow-hidden" style={{ backgroundColor: '#5b7c4a' }}>
@@ -389,7 +419,7 @@ export default function LandingPage() {
               </h3>
               <div className="bg-white/10 rounded-2xl p-4 mb-6 backdrop-blur-sm border border-white/20">
                 <div className="relative flex items-center justify-center group">
-                  <img src="/assets/Group-496.png" alt="Kartu Misi" className="w-full h-auto drop-shadow-xl transform group-hover:scale-105 transition-transform duration-500" />
+                  <img src="/assets/Group-496.png" alt="Kartu Misi" className="w-full h-auto drop-shadow-xl transform group-hover:scale-105 transition-transform duration-500" loading="lazy" decoding="async" />
                   <div className="absolute inset-0 flex items-center justify-center pointer-events-none">
                     <span className="text-[#b1362f] font-black uppercase text-center leading-none" style={{ fontSize: 'clamp(14px, 3vw, 24px)', fontFamily: '"Arial Black", sans-serif', textShadow: '1px 1px 0px rgba(255,255,255,0.5)' }}>
                       KARTU MISI
@@ -421,7 +451,7 @@ export default function LandingPage() {
       </section>
 
       {/* --- SECTION SPONSOR & PARTNERS (2x2 GRID OPTIMIZED) --- */}
-      <section id="sponsor" className="bg-white py-4 md:py-10 px-2 md:px-20">
+      <section id="sponsor" className="lazy-section bg-white py-4 md:py-10 px-2 md:px-20">
         {/* Menggunakan grid-cols-2 di mobile agar lebih compact di WebView */}
         <div className="max-w-5xl mx-auto grid grid-cols-2 md:grid-cols-2 gap-2 md:gap-4">
           {/* ROW 1 - PRESENTED BY */}
@@ -430,7 +460,7 @@ export default function LandingPage() {
             <div className="absolute top-0 left-0 bg-[#b1362f] text-white px-2 py-0.5 rounded-t-md text-[8px] md:text-xs font-bold uppercase z-10 shadow-sm">Presented By</div>
             <div className="bg-[#eeeeee] border border-gray-200 rounded-lg rounded-tl-none p-2 md:p-6 min-h-[60px] md:min-h-[110px] flex items-center justify-center transition-colors group-hover:border-[#b1362f]/30">
               <div className="flex items-center gap-1.5 grayscale brightness-0 opacity-70 group-hover:grayscale-0  group-hover:opacity-100 transition-all duration-500">
-                <img src="/assets/logo.png" alt="AWSM" className="w-6 h-6 md:w-12 md:h-12 object-contain" />
+                <img src="/assets/logo.png" alt="AWSM" className="w-6 h-6 md:w-12 md:h-12 object-contain" loading="lazy" decoding="async" />
                 <div className="text-gray-700 leading-none">
                   <span className="block font-black text-[10px] md:text-lg uppercase">AWSM</span>
                   <span className="text-[7px] md:text-[11px] font-bold opacity-60 uppercase">Organizer</span>
@@ -452,6 +482,8 @@ export default function LandingPage() {
                         src={logoPath}
                         alt={`sponsor-${i}`}
                         className="w-full h-auto object-contain"
+                        loading="lazy"
+                        decoding="async"
                         onError={(e) => {
                           (e.target as HTMLImageElement).style.display = 'none';
                           (e.target as HTMLImageElement).nextElementSibling?.classList.remove('hidden');
@@ -480,6 +512,8 @@ export default function LandingPage() {
                         src={logoPath}
                         alt={`supported-${i}`}
                         className="w-full h-auto object-contain"
+                        loading="lazy"
+                        decoding="async"
                         onError={(e) => {
                           (e.target as HTMLImageElement).style.display = 'none';
                           (e.target as HTMLImageElement).nextElementSibling?.classList.remove('hidden');
@@ -505,6 +539,8 @@ export default function LandingPage() {
                         src={logoPath}
                         alt={`partner-${i}`}
                         className="w-full h-auto object-contain"
+                        loading="lazy"
+                        decoding="async"
                         onError={(e) => {
                           (e.target as HTMLImageElement).style.display = 'none';
                           (e.target as HTMLImageElement).nextElementSibling?.classList.remove('hidden');
@@ -519,7 +555,7 @@ export default function LandingPage() {
         </div>
       </section>
       {/* --- SECTION PARTNER KOMUNITAS--- */}
-      <section id="partner" className="bg-white py-10 md:py-16 px-5 md:px-20 border-t border-gray-100">
+      <section id="partner" className="lazy-section bg-white py-10 md:py-16 px-5 md:px-20 border-t border-gray-100">
         <div className="max-w-6xl mx-auto">
           <div className="flex flex-col md:flex-row items-center justify-center gap-x-4 mb-8 text-center">
             <h2 className="font-black tracking-tighter" style={{ color: '#5b7c4a', fontFamily: '"Arial Black", sans-serif', fontSize: 'clamp(32px, 5vw, 48px)' }}>
@@ -543,6 +579,8 @@ export default function LandingPage() {
                       src={logoPath}
                       alt={`komunitas-${i + 1}`}
                       className="w-full h-full object-contain p-2 group-hover:scale-125 transition-transform duration-300"
+                      loading="lazy"
+                      decoding="async"
                       onError={(e) => {
                         (e.target as HTMLImageElement).style.display = 'none';
                         (e.target as HTMLImageElement).nextElementSibling?.classList.remove('hidden');
@@ -573,7 +611,7 @@ export default function LandingPage() {
       </section>
 
       {/* --- SECTION TENANT FNB --- */}
-      <section id="tenant" className="bg-white py-16 md:py-24 px-5 md:px-20 border-t border-gray-100">
+      <section id="tenant" className="lazy-section bg-white py-16 md:py-24 px-5 md:px-20 border-t border-gray-100">
         <div className="max-w-6xl mx-auto">
           <div className="flex flex-col md:flex-row items-center justify-between gap-6 mb-12">
             <h2 className="font-black tracking-tighter text-center md:text-left" style={{ fontFamily: '"Arial Black", sans-serif', fontSize: 'clamp(28px, 4.2vw, 48px)' }}>
@@ -609,6 +647,8 @@ export default function LandingPage() {
                         src={logoPNG}
                         alt={`fnb-${i + 1}`}
                         className="w-full h-full object-contain p-2 group-hover:scale-105 transition-transform"
+                        loading="lazy"
+                        decoding="async"
                         onError={(e) => {
                           (e.target as HTMLImageElement).style.display = 'none';
                           (e.target as HTMLImageElement).nextElementSibling?.classList.remove('hidden');
@@ -626,13 +666,14 @@ export default function LandingPage() {
       </section>
 
       {/* --- SECTION LOKASI ACARA --- */}
-      <section id="lokasi" className="bg-white py-12 md:py-24 px-4 md:px-20 border-t border-gray-100 relative overflow-hidden">
+      <section id="lokasi" className="lazy-section bg-white py-12 md:py-24 px-4 md:px-20 border-t border-gray-100 relative overflow-hidden">
         <div className="max-w-6xl mx-auto">
           <div className="relative w-full aspect-[4/5] sm:aspect-square md:aspect-[21/9] rounded-[25px] md:rounded-[50px] overflow-hidden shadow-2xl border-4 md:border-8 border-white group">
             <div
               className="absolute inset-0 bg-cover bg-center transition-transform duration-700 group-hover:scale-105"
+              data-lazy-observe
+              data-lazy-bg="/assets/Group-608.png"
               style={{
-                backgroundImage: "url('/assets/Group-608.png')",
                 backgroundPosition: 'center',
               }}
             ></div>
@@ -678,34 +719,34 @@ export default function LandingPage() {
       </section>
 
       {/* --- SECTION DENAH --- */}
-      <section id="denah" className="w-full relative bg-[#ffffff] pt-6 md:pt-20 pb-0">
+      <section id="denah" className="lazy-section w-full relative bg-[#ffffff] pt-6 md:pt-20 pb-0">
         <div className="absolute top-20 left-10 z-20 bg-white/80 backdrop-blur-md p-4 rounded-2xl shadow-xl hidden md:block">
           <h2 className="font-black text-black text-2xl">DENAH DESA SHINOBI</h2>
           <p className="text-xs text-gray-600 font-bold">SOLO JAPANESE FESTIVAL #2</p>
         </div>
 
         <div className="w-full min-h-auto md:min-h-screen flex items-center justify-center">
-          <img src="/assets/denah.png" alt="Denah" className="w-full h-auto object-contain" />
+          <img src="/assets/denah.png" alt="Denah" className="w-full h-auto object-contain" loading="lazy" decoding="async" />
         </div>
       </section>
 
       {/* --- SECTION DETAIL 3D --- */}
-      <section id="detail3d" className="w-full bg-[#ffffff] mt-10 md:mt-40 pt-10 md:pt-0 pb-0 md:pb-40 px-4 md:px-20">
+      <section id="detail3d" className="lazy-section w-full bg-[#ffffff] mt-10 md:mt-40 pt-10 md:pt-0 pb-0 md:pb-40 px-4 md:px-20">
         <div className="max-w-5xl mx-auto bg-white rounded-[30px] md:rounded-[60px] p-4 md:p-12 shadow-[0_10px_40px_rgba(0,0,0,0.04)] md:shadow-[0_40px_80px_rgba(0,0,0,0.08)] border border-gray-50">
           <div className="grid grid-cols-2 lg:grid-cols-3 gap-3 md:gap-8">
             {/* Image 1 */}
             <div className="order-1 group overflow-hidden rounded-[15px] md:rounded-[30px] aspect-[16/10] shadow-sm md:shadow-md bg-gray-100 relative">
-              <img src="/assets/26.png" alt="Detail 1" className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-110" />
+              <img src="/assets/26.png" alt="Detail 1" className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-110" loading="lazy" decoding="async" />
               <div className="absolute inset-0 bg-black/0 group-hover:bg-black/10 transition-colors duration-300" />
             </div>
             {/* Image 2 */}
             <div className="order-2 group overflow-hidden rounded-[15px] md:rounded-[30px] aspect-[16/10] shadow-sm md:shadow-md bg-gray-100 relative">
-              <img src="/assets/25.png" alt="Detail 2" className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-110" />
+              <img src="/assets/25.png" alt="Detail 2" className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-110" loading="lazy" decoding="async" />
               <div className="absolute inset-0 bg-black/0 group-hover:bg-black/10 transition-colors duration-300" />
             </div>
             {/* Image 3 */}
             <div className="order-3 group overflow-hidden rounded-[15px] md:rounded-[30px] aspect-[16/10] shadow-sm md:shadow-md bg-gray-100 relative">
-              <img src="/assets/24.png" alt="Detail 3" className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-110" />
+              <img src="/assets/24.png" alt="Detail 3" className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-110" loading="lazy" decoding="async" />
               <div className="absolute inset-0 bg-black/0 group-hover:bg-black/10 transition-colors duration-300" />
             </div>
             {/* Label Merah */}
@@ -716,12 +757,12 @@ export default function LandingPage() {
             </div>
             {/* Image 4 */}
             <div className="order-4 lg:order-5 group overflow-hidden rounded-[15px] md:rounded-[30px] aspect-[16/10] shadow-sm md:shadow-md bg-gray-100 relative">
-              <img src="/assets/23.png" alt="Detail 4" className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-110" />
+              <img src="/assets/23.png" alt="Detail 4" className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-110" loading="lazy" decoding="async" />
               <div className="absolute inset-0 bg-black/0 group-hover:bg-black/10 transition-colors duration-300" />
             </div>
             {/* Image 5 */}
             <div className="order-5 lg:order-6 group overflow-hidden rounded-[15px] md:rounded-[30px] aspect-[16/10] shadow-sm md:shadow-md bg-gray-100 relative">
-              <img src="/assets/22.png" alt="Detail 5" className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-110" />
+              <img src="/assets/22.png" alt="Detail 5" className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-110" loading="lazy" decoding="async" />
               <div className="absolute inset-0 bg-black/0 group-hover:bg-black/10 transition-colors duration-300" />
             </div>
           </div>
@@ -729,11 +770,11 @@ export default function LandingPage() {
       </section>
 
       {/* --- SECTION SPESIFIKASI PANGGUNG --- */}
-      <section id="spesifikasi" className="w-full bg-white py-20 px-4 md:px-10 overflow-hidden">
+      <section id="spesifikasi" className="lazy-section w-full bg-white py-20 px-4 md:px-10 overflow-hidden">
         <div className="max-w-6xl mx-auto relative flex flex-col lg:flex-row items-center">
           <div className="w-full lg:w-[60%] z-20 relative">
             <div className="rounded-[25px] overflow-hidden shadow-2xl">
-              <img src="/assets/panggung.png" alt="Desain Panggung" className="w-full h-auto object-cover block" />
+              <img src="/assets/panggung.png" alt="Desain Panggung" className="w-full h-auto object-cover block" loading="lazy" decoding="async" />
             </div>
           </div>
           <div className="w-full lg:w-[50%] bg-[#5b7c4a] lg:rounded-r-[40px] lg:rounded-l-none rounded-[30px] py-10 px-6 md:pl-20 md:pr-10 shadow-xl -mt-5 lg:mt-0 lg:-ml-16 z-10">
@@ -763,7 +804,7 @@ export default function LandingPage() {
       {/* --- SECTION MEDIA PARTNER --- */}
       <section
         id="media"
-        className="relative bg-white py-16 md:py-24 px-5 md:px-20 border-t border-gray-100"
+        className="lazy-section relative bg-white py-16 md:py-24 px-5 md:px-20 border-t border-gray-100"
         style={{
           borderBottomLeftRadius: '35px',
           borderBottomRightRadius: '35px',
@@ -794,6 +835,8 @@ export default function LandingPage() {
                       src={logoPath}
                       alt={`media-${i + 1}`}
                       className="w-full h-full object-contain p-2 group-hover:scale-125 transition-transform duration-300"
+                      loading="lazy"
+                      decoding="async"
                       onError={(e) => {
                         (e.target as HTMLImageElement).style.display = 'none';
                         (e.target as HTMLImageElement).nextElementSibling?.classList.remove('hidden');
@@ -810,13 +853,13 @@ export default function LandingPage() {
       </section>
 
       {/* --- FOOTER --- */}
-      <footer className="w-full block overflow-hidden font-['Montserrat',sans-serif]">
-        <div className="relative w-full h-auto md:h-[90vh] bg-cover bg-center bg-no-repeat flex flex-col" style={{ backgroundImage: "url('/assets/footer.png')" }}>
+      <footer className="lazy-section w-full block overflow-hidden font-['Montserrat',sans-serif]">
+        <div className="relative w-full h-auto md:h-[90vh] bg-cover bg-center bg-no-repeat flex flex-col" data-lazy-observe data-lazy-bg="/assets/footer.png">
           <div className="absolute inset-0 bg-black/60 md:bg-gradient-to-r md:from-black/90 md:via-black/30 md:to-transparent z-0"></div>
 
           <div className="relative z-10 w-full max-w-[1440px] mx-auto px-6 md:px-20 py-12 md:py-14 flex flex-col h-full justify-center md:justify-start">
             <div className="flex items-center gap-3">
-              <img src="/assets/logo.png" alt="AWSM Logo" className="w-8 h-8 md:w-10 md:h-10 object-contain" />
+              <img src="/assets/logo.png" alt="AWSM Logo" className="w-8 h-8 md:w-10 md:h-10 object-contain" loading="lazy" decoding="async" />
               <div className="text-white text-[10px] md:text-[12px] font-bold tracking-[0.2em] uppercase leading-tight">
                 <span className="font-light opacity-70 block md:inline">PRESENTED BY</span> AWSM EVENT ORGANIZER
               </div>

@@ -25,6 +25,12 @@ body {
   flex-direction: column;
 }
 
+.lazy-section {
+  content-visibility: auto;
+  contain: layout paint style;
+  contain-intrinsic-size: 900px;
+}
+
 /* OVERLAY HITAM PINDAH KE SINI */
 .hero-section::before {
   content: '';
@@ -41,7 +47,6 @@ body {
 .misi-section {
   width: 100%;
   position: relative;
-  background-image: url('/assets/Group-496.png');
   background-size: 100% 100%; /* Memaksa gambar mentok kanan-kiri & atas-bawah */
   background-position: center;
   background-repeat: no-repeat;
@@ -52,9 +57,14 @@ body {
   padding: 0;
 }
 
+.misi-section.is-visible {
+  background-image: url('/assets/Group-496.png');
+}
+
 @media (max-width: 768px) {
   .hero-section {
     background-position: 65% bottom; /* Penyesuaian mobile */
+    background-attachment: scroll;
   }
 }
 @layer base {
