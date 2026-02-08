@@ -270,7 +270,7 @@ export default function LandingPage() {
                 <div className="flex-1 text-center md:text-left">
                   <h2 className="cta-title text-lg md:text-xl leading-tight">
                     Dapatkan Tiket <br className="hidden md:block" />
-                    <span className="text-sm md:text-base font-normal">Presale IDR 40.000</span>
+                    <span className="text-sm md:text-base font-normal">IDR 50.000</span>
                   </h2>
                 </div>
                 <button className="btn-payment w-full md:w-auto" onClick={() => router.push('/beli-tiket')}>

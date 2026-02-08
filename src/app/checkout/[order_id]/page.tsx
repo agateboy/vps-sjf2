@@ -327,7 +327,7 @@ export default function CheckoutPage() {
           <div className="space-y-3">
             <div className="flex justify-between border-b pb-2">
               <span className="text-gray-600">Harga Tiket</span>
-              <span className="font-semibold text-gray-800">Rp 40.000</span>
+              <span className="font-semibold text-gray-800">Rp 50.000</span>
             </div>
             <div className="flex justify-between border-b pb-2">
               <span className="text-gray-600">Status</span>
