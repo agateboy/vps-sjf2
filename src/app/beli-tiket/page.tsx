@@ -32,8 +32,6 @@ export default function BeliTiketPage() {
 
   const [agreeTerms, setAgreeTerms] = useState(false);
   const [loading, setLoading] = useState(false);
-  const [showResult, setShowResult] = useState(false);
-  const [orderId, setOrderId] = useState('');
 
   const handleInputChange = (e) => {
     const { name, value, type } = e.target;
@@ -71,57 +69,8 @@ export default function BeliTiketPage() {
       const data = await response.json();
       if (!response.ok) throw new Error(data.message || 'Gagal memproses');
 
-      setOrderId(data.order_id);
-
-      // Load SNAP script
-      const script = document.createElement('script');
-      const isProduction = process.env.NEXT_PUBLIC_MIDTRANS_IS_PRODUCTION === 'true';
-      script.src = isProduction 
-        ? 'https://app.midtrans.com/snap/snap.js'
-        : 'https://app.sandbox.midtrans.com/snap/snap.js';
-      script.setAttribute('data-client-key', process.env.NEXT_PUBLIC_MIDTRANS_CLIENT_KEY || '');
-      script.async = true;
-      
-      script.onload = () => {
-        if (window.snap) {
-          window.snap.pay(data.token, {
-            onSuccess: () => {
-              console.log('Payment success');
-              setLoading(false);
-              // Redirect to checkout page after success
-              setTimeout(() => {
-                window.location.href = `/checkout/${data.order_id}`;
-              }, 1500);
-            },
-            onPending: () => {
-              console.log('Payment pending');
-              setLoading(false);
-              // Redirect to checkout page to show pending status
-              setTimeout(() => {
-                window.location.href = `/checkout/${data.order_id}`;
-              }, 1500);
-            },
-            onError: () => {
-              console.log('Payment error');
-              setLoading(false);
-              alert('Pembayaran gagal. Silakan coba lagi.');
-            },
-            onClose: () => {
-              console.log('Customer closed the popup');
-              setLoading(false);
-              // Stay on form page if user close popup
-            }
-          });
-        }
-      };
-      
-      script.onerror = () => {
-        console.error('Failed to load SNAP script');
-        setLoading(false);
-        alert('Gagal memuat payment gateway. Silakan coba lagi.');
-      };
-      
-      document.body.appendChild(script);
+      // Langsung redirect ke halaman checkout
+      window.location.href = `/checkout/${data.order_id}`;
     } catch (error) {
       alert(error.message || 'Terjadi kesalahan');
       setLoading(false);
@@ -135,34 +84,6 @@ export default function BeliTiketPage() {
   // Input: Border Lebih Gelap (Gray-400), Teks Hitam, Placeholder Terbaca
   const inputStyle =
     'w-full bg-white border border-gray-400 rounded-xl px-5 py-3.5 text-black placeholder:text-gray-500 focus:outline-none focus:border-black focus:ring-2 focus:ring-black/10 transition-all shadow-sm text-sm font-bold';
-
-  // --- HALAMAN SUKSES (RESULT) ---
-  if (showResult) {
-    return (
-      <div className="relative min-h-screen flex items-center justify-center p-6 bg-white text-black">
-        <div className="w-full max-w-xl p-10 text-center animate-in fade-in zoom-in duration-500 rounded-[30px] border-2 border-gray-200 shadow-2xl bg-gray-50">
-          <div className="w-16 h-16 bg-black text-white rounded-full flex items-center justify-center mx-auto mb-4 shadow-lg">
-            <i className="fas fa-check text-2xl"></i>
-          </div>
-          <h2 className="text-3xl font-black mb-3 text-black uppercase italic tracking-tighter">Pembayaran Berhasil!</h2>
-          <p className="mb-8 text-gray-800 font-bold text-lg">Tiket digital Anda telah siap. Silakan cek email atau download di bawah.</p>
-
-          <div className="w-full aspect-[4/3] mb-8 rounded-2xl overflow-hidden border-2 border-gray-300 shadow-lg bg-white">
-            <iframe src={`/api/ticket/view/${orderId}`} title="Tiket Preview" className="w-full h-full" />
-          </div>
-
-          <div className="flex flex-col gap-4 w-full items-center">
-            <a href={`/api/ticket/download/${orderId}`} className="btn-payment no-underline flex items-center justify-center !max-w-full !w-full shadow-xl bg-black text-white hover:bg-gray-800 py-4 rounded-xl font-black tracking-widest text-lg">
-              DOWNLOAD PDF TIKET
-            </a>
-            <button onClick={() => window.location.reload()} className="text-gray-600 hover:text-black transition-all text-sm font-black uppercase tracking-widest underline decoration-2 underline-offset-4">
-              BELI TIKET LAGI
-            </button>
-          </div>
-        </div>
-      </div>
-    );
-  }
 
   // --- HALAMAN UTAMA (FORM) ---
   return (
