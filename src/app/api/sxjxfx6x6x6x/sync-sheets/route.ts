@@ -72,6 +72,8 @@ export async function GET(req: NextRequest) {
       'Medsos Type',
       'Medsos User',
       'Status Tiket',
+      'Status Masuk',
+      'Kartu Misi',
       'Waktu Beli'
     ];
 
@@ -90,6 +92,8 @@ export async function GET(req: NextRequest) {
       'Medsos Type': o.sosmed_type,
       'Medsos User': o.sosmed_username,
       'Status Tiket': o.status_tiket,
+      'Status Masuk': o.status_masuk || (o.status_tiket === 'sudah_masuk' ? 'sudah' : 'belum'),
+      'Kartu Misi': (o.kartu_misi ?? (o.status_tiket === 'sudah_masuk' ? 1 : 0)) ? 'YA' : 'TIDAK',
       'Waktu Beli': new Date(o.createdAt).toLocaleString('id-ID', { timeZone: 'Asia/Jakarta' })
     }));
 

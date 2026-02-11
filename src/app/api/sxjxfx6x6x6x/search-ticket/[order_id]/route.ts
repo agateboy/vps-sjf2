@@ -45,7 +45,9 @@ export async function GET(
         email: order.email,
         no_hp: order.no_hp,
         status_bayar: order.status_bayar,
-        status_tiket: order.status_tiket
+        status_tiket: order.status_tiket,
+        status_masuk: order.status_masuk || (order.status_tiket === 'sudah_masuk' ? 'sudah' : 'belum'),
+        kartu_misi: order.kartu_misi ?? (order.status_tiket === 'sudah_masuk' ? 1 : 0)
       }
     });
   } catch (error: any) {

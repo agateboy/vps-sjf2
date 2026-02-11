@@ -15,19 +15,15 @@ const originalReadFileSync = fs.readFileSync;
 fs.readFileSync = function (filePath: string | Buffer, encoding?: BufferEncoding | null): any {
     let pathStr = typeof filePath === 'string' ? filePath : filePath.toString();
 
-    // Handle /ROOT/node_modules/pdfkit paths (direct case)
-    if (pathStr.includes('/ROOT/node_modules/pdfkit')) {
-        const actualPath = pathStr.replace('/ROOT/node_modules', path.join(PROJECT_ROOT, 'node_modules'));
-        if (fs.existsSync(actualPath)) {
-            return originalReadFileSync.call(fs, actualPath, encoding);
-        }
-    }
-
-    // If trying to read from /ROOT/solo-event/node_modules/pdfkit, redirect to actual location
-    if (pathStr.includes('/ROOT/solo-event/node_modules/pdfkit')) {
-        const actualPath = pathStr.replace('/ROOT/solo-event', PROJECT_ROOT);
-        if (fs.existsSync(actualPath)) {
-            return originalReadFileSync.call(fs, actualPath, encoding);
+    // Handle /ROOT paths - any path starting with /ROOT needs to be redirected
+    if (pathStr.startsWith('/ROOT/')) {
+        // Check if this is a pdfkit path - if so, extract just the relative part from node_modules
+        const pdfkitMatch = pathStr.match(/\/node_modules\/pdfkit\/.+/);
+        if (pdfkitMatch) {
+            const actualPath = path.join(PROJECT_ROOT, pdfkitMatch[0]);
+            if (fs.existsSync(actualPath)) {
+                return originalReadFileSync.call(fs, actualPath, encoding);
+            }
         }
     }
 

@@ -22,6 +22,8 @@ db.exec(`
     sosmed_username TEXT NOT NULL,
     status_bayar TEXT DEFAULT 'pending',
     status_tiket TEXT DEFAULT 'belum_masuk',
+    status_masuk TEXT DEFAULT 'belum',
+    kartu_misi INTEGER DEFAULT 0,
     payment_method TEXT,
     qris_image TEXT,
     snap_token TEXT,
@@ -36,6 +38,8 @@ try {
   const hasPaymentMethod = columns.some(col => col.name === 'payment_method');
   const hasQrisImage = columns.some(col => col.name === 'qris_image');
   const hasSnapToken = columns.some(col => col.name === 'snap_token');
+  const hasStatusMasuk = columns.some(col => col.name === 'status_masuk');
+  const hasKartuMisi = columns.some(col => col.name === 'kartu_misi');
   
   if (!hasPaymentMethod) {
     console.log("Migrating database: Adding column 'payment_method'...");
@@ -48,6 +52,23 @@ try {
   if (!hasSnapToken) {
     console.log("Migrating database: Adding column 'snap_token'...");
     db.prepare("ALTER TABLE orders ADD COLUMN snap_token TEXT").run();
+  }
+  if (!hasStatusMasuk) {
+    console.log("Migrating database: Adding column 'status_masuk'...");
+    db.prepare("ALTER TABLE orders ADD COLUMN status_masuk TEXT DEFAULT 'belum'").run();
+  }
+  if (!hasKartuMisi) {
+    console.log("Migrating database: Adding column 'kartu_misi'...");
+    db.prepare("ALTER TABLE orders ADD COLUMN kartu_misi INTEGER DEFAULT 0").run();
+  }
+
+  if (!hasStatusMasuk || !hasKartuMisi) {
+    db.prepare(
+      "UPDATE orders SET status_masuk = CASE WHEN status_tiket = 'sudah_masuk' THEN 'sudah' ELSE 'belum' END WHERE status_masuk IS NULL OR status_masuk = ''"
+    ).run();
+    db.prepare(
+      "UPDATE orders SET kartu_misi = CASE WHEN status_tiket = 'sudah_masuk' THEN 1 ELSE 0 END WHERE kartu_misi IS NULL"
+    ).run();
   }
 } catch (error) {
   console.error("Migration warning:", error);

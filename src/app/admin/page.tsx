@@ -22,6 +22,8 @@ export default function AdminPage() {
   const [csvPreview, setCsvPreview] = useState<any>(null);
   const [csvText, setCsvText] = useState<string>('');
   const [isImporting, setIsImporting] = useState(false);
+  const [scanMode, setScanMode] = useState<'masuk' | 'keluar'>('masuk');
+  const scanModeRef = useRef<'masuk' | 'keluar'>('masuk');
   const router = useRouter();
   const inactivityTimerRef = useRef<NodeJS.Timeout | null>(null);
   const [timeoutWarning, setTimeoutWarning] = useState(false);
@@ -116,22 +118,192 @@ export default function AdminPage() {
     };
   }, [auth]);
 
+  useEffect(() => {
+    if (!auth) return;
+    const statusEl = document.getElementById('statusScan');
+    if (!statusEl) return;
+    const label = scanMode === 'masuk' ? 'Sistem Siap Scan (Pintu Masuk)...' : 'Sistem Siap Scan (Pintu Keluar)...';
+    statusEl.innerText = label;
+  }, [auth, scanMode]);
+
+  useEffect(() => {
+    scanModeRef.current = scanMode;
+  }, [scanMode]);
+
+  const setStatusBadge = (text: string, className: string) => {
+    const statusEl = document.getElementById('statusScan');
+    if (!statusEl) return;
+    statusEl.innerText = text;
+    statusEl.className = className;
+  };
+
   function onScanSuccess(decodedText: string) {
     if (isProcessing) return;
     setIsProcessing(true);
-    document.getElementById('statusScan')!.innerText = '⏳ Memeriksa Data...';
-    document.getElementById('statusScan')!.className = 'badge bg-warning text-dark p-2 fs-6';
+    const activeMode = scanModeRef.current;
+    const modeLabel = activeMode === 'masuk' ? 'Pintu Masuk' : 'Pintu Keluar';
+    setStatusBadge(`⏳ Memeriksa Data (${modeLabel})...`, 'badge bg-warning text-dark p-2 fs-6');
+    const scannedOrderId = decodedText;
     fetch('/api/sxjxfx6x6x6x/scan', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json', Authorization: `Basic ${auth}` },
-      body: JSON.stringify({ qr_content: decodedText }),
+      body: JSON.stringify({ qr_content: decodedText, mode: activeMode }),
     })
       .then((res) => res.json())
-      .then((data) => {
+      .then(async (data) => {
         if (data.success) {
+          const name = data?.data?.nama || '-';
+          const phone = data?.data?.no_hp || '-';
+          const statusMasuk = data?.data?.status_masuk === 'sudah' ? 'SUDAH' : 'BELUM';
+          const hasCard = Boolean(data?.data?.kartu_misi);
+          const isPendingCard = Boolean(data?.data?.kartu_misi_pending);
+          const cardLabel = isPendingCard ? 'BELUM (BERIKAN)' : hasCard ? 'SUDAH' : 'BELUM';
+          const action = data?.action || '';
+          const titleMap: Record<string, string> = {
+            beri_kartu: 'BERIKAN KARTU MISI ✅',
+            masuk_lagi: 'MASUK LAGI ✅',
+            keluar: 'BERHASIL KELUAR ✅',
+            keluar_tetap: 'SUDAH KELUAR ✅',
+            cek_kartu_misi: 'CEK KARTU MISI',
+            kartu_diberikan: 'KARTU MISI DIBERIKAN ✅'
+          };
+          const title = titleMap[action] || (activeMode === 'masuk' ? 'BERHASIL MASUK ✅' : 'BERHASIL KELUAR ✅');
+          const helperText = action === 'beri_kartu'
+            ? 'Berikan kartu misi sekarang. Pastikan kartu fisik diserahkan.'
+            : activeMode === 'masuk' && hasCard
+              ? 'Cek kartu misi fisik di tangan peserta.'
+              : 'Silakan lanjutkan proses.';
+
+          const badgeHtml = `<div style="display:flex;gap:8px;justify-content:center;margin:12px 0;flex-wrap:wrap;"><span style="padding:4px 8px;border-radius:12px;background:#eef2ff;color:#3730a3;font-size:12px;font-weight:700;">Status Masuk: ${statusMasuk}</span><span style="padding:4px 8px;border-radius:12px;background:${isPendingCard ? '#fef9c3' : hasCard ? '#dcfce7' : '#fee2e2'};color:${isPendingCard ? '#854d0e' : hasCard ? '#166534' : '#991b1b'};font-size:12px;font-weight:700;">Kartu Misi: ${cardLabel}</span></div>`;
+
+          if (action === 'beri_kartu') {
+            const confirm = await Swal.fire({
+              title,
+              html: `<h3 style="color:#2ecc71">${name}</h3><p>No HP: <b>${phone}</b></p>${badgeHtml}<small>${helperText}</small>`,
+              icon: 'success',
+              showCancelButton: true,
+              confirmButtonText: 'Kartu Sudah Diberikan',
+              cancelButtonText: 'Belum',
+              background: '#f0fff4'
+            });
+            if (confirm.isConfirmed) {
+              await fetch('/api/sxjxfx6x6x6x/scan', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json', Authorization: `Basic ${auth}` },
+                body: JSON.stringify({ qr_content: scannedOrderId, mode: 'masuk', confirm_kartu_misi: true })
+              });
+            }
+            resetScanner();
+            return;
+          }
+
+          if (action === 'cek_kartu_misi') {
+            const confirm = await Swal.fire({
+              title: 'ADMIN CEK KARTU MISI',
+              html: `<h3 style="color:#2ecc71">${name}</h3><p>No HP: <b>${phone}</b></p>${badgeHtml}<p style="font-size:16px;font-weight:bold;color:#d97706;margin-top:12px">Cek Kartu Misi ADA atau TIDAK?</p>`,
+              icon: 'question',
+              showCancelButton: true,
+              confirmButtonText: 'ADA Kartu Misi',
+              cancelButtonText: 'TIDAK ADA',
+              confirmButtonColor: '#16a34a',
+              cancelButtonColor: '#dc2626',
+              background: '#fffbeb'
+            });
+            if (confirm.isConfirmed) {
+              const res = await fetch('/api/sxjxfx6x6x6x/scan', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json', Authorization: `Basic ${auth}` },
+                body: JSON.stringify({ qr_content: scannedOrderId, mode: 'masuk', confirm_kartu_fisik: true })
+              });
+              const nextData = await res.json();
+              if (nextData.success) {
+                Swal.fire({
+                  title: titleMap[nextData.action] || 'MASUK LAGI ✅',
+                  text: 'Peserta boleh masuk kembali.',
+                  icon: 'success',
+                  timer: 2000,
+                  showConfirmButton: false
+                });
+              } else {
+                Swal.fire('DITOLAK! ❌', nextData.message, 'error');
+              }
+            } else {
+              Swal.fire('DITOLAK! ❌', 'Tidak ada kartu misi.', 'error');
+            }
+            resetScanner();
+            return;
+          }
+
+          if (action === 'pilih_keluar_masuk') {
+            const statusLabel = statusMasuk === 'SUDAH' ? '🔵 Peserta INSIDE (di dalam)' : '⚪ Peserta OUTSIDE (di luar)';
+            const choice = await Swal.fire({
+              title: 'Pintu Keluar - Pilih Aksi',
+              html: `<h3 style="color:#2ecc71">${name}</h3><p>No HP: <b>${phone}</b></p>${badgeHtml}<p style="font-size:13px;font-weight:bold;margin:8px 0">${statusLabel}</p><small>Pilih aksi untuk peserta ini:</small>`,
+              icon: 'question',
+              showDenyButton: true,
+              showCancelButton: true,
+              confirmButtonText: '🚪 KELUAR',
+              denyButtonText: '🚶 MASUK',
+              cancelButtonText: 'Batal',
+              confirmButtonColor: '#dc2626',
+              denyButtonColor: '#16a34a'
+            });
+            if (choice.isConfirmed || choice.isDenied) {
+              const decision = choice.isConfirmed ? 'keluar' : 'masuk';
+              const res = await fetch('/api/sxjxfx6x6x6x/scan', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json', Authorization: `Basic ${auth}` },
+                body: JSON.stringify({ qr_content: scannedOrderId, mode: 'keluar', decision })
+              });
+              const nextData = await res.json();
+
+              // Jika API kembalikan cek_kartu_misi → tampilkan dialog ADA/TIDAK
+              if (nextData.success && nextData.action === 'cek_kartu_misi') {
+                const cekResult = await Swal.fire({
+                  title: 'ADMIN CEK KARTU MISI',
+                  html: `<h3 style="color:#2ecc71">${nextData.data?.nama || name}</h3><p>No HP: <b>${nextData.data?.no_hp || phone}</b></p><p style="font-size:16px;font-weight:bold;color:#d97706;margin-top:12px">Cek Kartu Misi ADA atau TIDAK?</p>`,
+                  icon: 'question',
+                  showCancelButton: true,
+                  confirmButtonText: 'ADA Kartu Misi',
+                  cancelButtonText: 'TIDAK ADA',
+                  confirmButtonColor: '#16a34a',
+                  cancelButtonColor: '#dc2626',
+                  background: '#fffbeb'
+                });
+                if (cekResult.isConfirmed) {
+                  const masukRes = await fetch('/api/sxjxfx6x6x6x/scan', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json', Authorization: `Basic ${auth}` },
+                    body: JSON.stringify({ qr_content: scannedOrderId, mode: 'masuk', confirm_kartu_fisik: true })
+                  });
+                  const masukData = await masukRes.json();
+                  if (masukData.success) {
+                    Swal.fire({ title: titleMap[masukData.action] || 'MASUK LAGI ✅', text: 'Peserta boleh masuk kembali.', icon: 'success', timer: 2000, showConfirmButton: false });
+                  } else {
+                    Swal.fire('DITOLAK! ❌', masukData.message, 'error');
+                  }
+                } else {
+                  Swal.fire('DITOLAK! ❌', 'Tidak ada kartu misi. Peserta tidak boleh masuk.', 'error');
+                }
+              } else if (nextData.success) {
+                Swal.fire({
+                  title: titleMap[nextData.action] || 'BERHASIL ✅',
+                  text: nextData.message || 'Status diperbarui.',
+                  icon: 'success',
+                  timer: 2000,
+                  showConfirmButton: false
+                });
+              } else {
+                Swal.fire('DITOLAK! ❌', nextData.message, 'error');
+              }
+            }
+            resetScanner();
+            return;
+          }
+
           Swal.fire({
-            title: 'BERHASIL MASUK! ✅',
-            html: `<h3 style="color:#2ecc71">${data.data.nama}</h3><p>No HP: <b>${data.data.no_hp}</b></p><hr><small>Silakan masuk venue.</small>`,
+            title,
+            html: `<h3 style="color:#2ecc71">${name}</h3><p>No HP: <b>${phone}</b></p>${badgeHtml}<small>${helperText}</small>`,
             icon: 'success',
             timer: 2500,
             showConfirmButton: false,
@@ -157,8 +329,8 @@ export default function AdminPage() {
   function onScanFailure(error: any) {}
   function resetScanner() {
     setIsProcessing(false);
-    document.getElementById('statusScan')!.innerText = 'Sistem Siap Scan...';
-    document.getElementById('statusScan')!.className = 'badge bg-secondary p-2 fs-6';
+    const label = scanMode === 'masuk' ? 'Sistem Siap Scan (Pintu Masuk)...' : 'Sistem Siap Scan (Pintu Keluar)...';
+    setStatusBadge(label, 'badge bg-secondary p-2 fs-6');
   }
 
   async function syncToSheets() {
@@ -395,6 +567,29 @@ export default function AdminPage() {
                     <h2 className="text-sm font-bold uppercase tracking-widest text-slate-200">Scan QR Code</h2>
                   </div>
                   <div className="animate-pulse w-2 h-2 rounded-full bg-green-500"></div>
+                </div>
+
+                <div className="grid grid-cols-2 gap-2 mb-4">
+                  <button
+                    onClick={() => setScanMode('masuk')}
+                    className={`px-3 py-2 rounded-lg text-xs font-bold uppercase tracking-widest transition-all ${
+                      scanMode === 'masuk'
+                        ? 'bg-emerald-500 text-white shadow-lg shadow-emerald-600/30'
+                        : 'bg-slate-900/60 text-slate-300 border border-slate-700 hover:bg-slate-800'
+                    }`}
+                  >
+                    Mode Pintu Masuk
+                  </button>
+                  <button
+                    onClick={() => setScanMode('keluar')}
+                    className={`px-3 py-2 rounded-lg text-xs font-bold uppercase tracking-widest transition-all ${
+                      scanMode === 'keluar'
+                        ? 'bg-amber-500 text-white shadow-lg shadow-amber-600/30'
+                        : 'bg-slate-900/60 text-slate-300 border border-slate-700 hover:bg-slate-800'
+                    }`}
+                  >
+                    Mode Pintu Keluar
+                  </button>
                 </div>
 
                 <div className="bg-black/40 p-2 rounded-xl border border-white/5 mb-4 shadow-inner">
