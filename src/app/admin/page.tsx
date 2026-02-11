@@ -156,55 +156,57 @@ export default function AdminPage() {
           const phone = data?.data?.no_hp || '-';
           const statusMasuk = data?.data?.status_masuk === 'sudah' ? 'SUDAH' : 'BELUM';
           const hasCard = Boolean(data?.data?.kartu_misi);
-          const isPendingCard = Boolean(data?.data?.kartu_misi_pending);
-          const cardLabel = isPendingCard ? 'BELUM (BERIKAN)' : hasCard ? 'SUDAH' : 'BELUM';
           const action = data?.action || '';
           const titleMap: Record<string, string> = {
-            beri_kartu: 'BERIKAN KARTU MISI ✅',
-            masuk_lagi: 'MASUK LAGI ✅',
+            masuk_pertama_ok: 'MASUK & KARTU MISI DIBERIKAN ✅',
+            masuk_lagi: 'MASUK KEMBALI ✅',
             keluar: 'BERHASIL KELUAR ✅',
-            keluar_tetap: 'SUDAH KELUAR ✅',
+            konfirmasi_masuk_pertama: 'MASUK PERTAMA KALI',
             cek_kartu_misi: 'CEK KARTU MISI',
-            kartu_diberikan: 'KARTU MISI DIBERIKAN ✅'
           };
           const title = titleMap[action] || (activeMode === 'masuk' ? 'BERHASIL MASUK ✅' : 'BERHASIL KELUAR ✅');
-          const helperText = action === 'beri_kartu'
-            ? 'Berikan kartu misi sekarang. Pastikan kartu fisik diserahkan.'
-            : activeMode === 'masuk' && hasCard
-              ? 'Cek kartu misi fisik di tangan peserta.'
-              : 'Silakan lanjutkan proses.';
 
-          const badgeHtml = `<div style="display:flex;gap:8px;justify-content:center;margin:12px 0;flex-wrap:wrap;"><span style="padding:4px 8px;border-radius:12px;background:#eef2ff;color:#3730a3;font-size:12px;font-weight:700;">Status Masuk: ${statusMasuk}</span><span style="padding:4px 8px;border-radius:12px;background:${isPendingCard ? '#fef9c3' : hasCard ? '#dcfce7' : '#fee2e2'};color:${isPendingCard ? '#854d0e' : hasCard ? '#166534' : '#991b1b'};font-size:12px;font-weight:700;">Kartu Misi: ${cardLabel}</span></div>`;
+          const badgeHtml = `<div style="display:flex;gap:8px;justify-content:center;margin:12px 0;flex-wrap:wrap;"><span style="padding:4px 8px;border-radius:12px;background:#eef2ff;color:#3730a3;font-size:12px;font-weight:700;">Status: ${statusMasuk}</span><span style="padding:4px 8px;border-radius:12px;background:${hasCard ? '#dcfce7' : '#fee2e2'};color:${hasCard ? '#166534' : '#991b1b'};font-size:12px;font-weight:700;">Kartu Misi: ${hasCard ? 'SUDAH' : 'BELUM'}</span></div>`;
 
-          if (action === 'beri_kartu') {
+          // === PINTU MASUK: Pertama kali → konfirmasi kasih kartu misi ===
+          if (action === 'konfirmasi_masuk_pertama') {
             const confirm = await Swal.fire({
-              title,
-              html: `<h3 style="color:#2ecc71">${name}</h3><p>No HP: <b>${phone}</b></p>${badgeHtml}<small>${helperText}</small>`,
-              icon: 'success',
+              title: 'MASUK PERTAMA KALI',
+              html: `<h3 style="color:#2ecc71">${name}</h3><p>No HP: <b>${phone}</b></p>${badgeHtml}<p style="font-size:15px;font-weight:bold;color:#059669;margin-top:12px">Sudah berikan kartu misi?</p>`,
+              icon: 'question',
               showCancelButton: true,
-              confirmButtonText: 'Kartu Sudah Diberikan',
-              cancelButtonText: 'Belum',
-              background: '#f0fff4'
+              confirmButtonText: '✅ SUDAH, MASUK',
+              cancelButtonText: 'KEMBALI',
+              confirmButtonColor: '#16a34a',
+              cancelButtonColor: '#6b7280',
+              background: '#f0fdf4'
             });
             if (confirm.isConfirmed) {
-              await fetch('/api/sxjxfx6x6x6x/scan', {
+              const res = await fetch('/api/sxjxfx6x6x6x/scan', {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json', Authorization: `Basic ${auth}` },
-                body: JSON.stringify({ qr_content: scannedOrderId, mode: 'masuk', confirm_kartu_misi: true })
+                body: JSON.stringify({ qr_content: scannedOrderId, mode: 'masuk', confirm_masuk: 'pertama' })
               });
+              const nextData = await res.json();
+              if (nextData.success) {
+                Swal.fire({ title: 'MASUK & KARTU MISI DIBERIKAN ✅', html: `<h3 style="color:#2ecc71">${name}</h3>`, icon: 'success', timer: 2500, showConfirmButton: false, background: '#f0fdf4' });
+              } else {
+                Swal.fire('DITOLAK! ❌', nextData.message, 'error');
+              }
             }
             resetScanner();
             return;
           }
 
+          // === PINTU MASUK: Re-entry → admin cek kartu misi ADA / TIDAK ===
           if (action === 'cek_kartu_misi') {
             const confirm = await Swal.fire({
               title: 'ADMIN CEK KARTU MISI',
-              html: `<h3 style="color:#2ecc71">${name}</h3><p>No HP: <b>${phone}</b></p>${badgeHtml}<p style="font-size:16px;font-weight:bold;color:#d97706;margin-top:12px">Cek Kartu Misi ADA atau TIDAK?</p>`,
+              html: `<h3 style="color:#2ecc71">${name}</h3><p>No HP: <b>${phone}</b></p>${badgeHtml}<p style="font-size:16px;font-weight:bold;color:#d97706;margin-top:12px">Kartu Misi ADA atau TIDAK?</p>`,
               icon: 'question',
               showCancelButton: true,
-              confirmButtonText: 'ADA Kartu Misi',
-              cancelButtonText: 'TIDAK ADA',
+              confirmButtonText: 'ADA ✅',
+              cancelButtonText: 'TIDAK ADA ❌',
               confirmButtonColor: '#16a34a',
               cancelButtonColor: '#dc2626',
               background: '#fffbeb'
@@ -213,97 +215,25 @@ export default function AdminPage() {
               const res = await fetch('/api/sxjxfx6x6x6x/scan', {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json', Authorization: `Basic ${auth}` },
-                body: JSON.stringify({ qr_content: scannedOrderId, mode: 'masuk', confirm_kartu_fisik: true })
+                body: JSON.stringify({ qr_content: scannedOrderId, mode: 'masuk', confirm_masuk: 'ada_kartu' })
               });
               const nextData = await res.json();
               if (nextData.success) {
-                Swal.fire({
-                  title: titleMap[nextData.action] || 'MASUK LAGI ✅',
-                  text: 'Peserta boleh masuk kembali.',
-                  icon: 'success',
-                  timer: 2000,
-                  showConfirmButton: false
-                });
+                Swal.fire({ title: 'MASUK KEMBALI ✅', html: `<h3 style="color:#2ecc71">${name}</h3><p>Peserta boleh masuk.</p>`, icon: 'success', timer: 2500, showConfirmButton: false, background: '#f0fdf4' });
               } else {
                 Swal.fire('DITOLAK! ❌', nextData.message, 'error');
               }
             } else {
-              Swal.fire('DITOLAK! ❌', 'Tidak ada kartu misi.', 'error');
+              Swal.fire({ title: 'DITOLAK! ❌', text: 'Tidak ada kartu misi. Peserta tidak boleh masuk.', icon: 'error', timer: 3000, showConfirmButton: false });
             }
             resetScanner();
             return;
           }
 
-          if (action === 'pilih_keluar_masuk') {
-            const statusLabel = statusMasuk === 'SUDAH' ? '🔵 Peserta INSIDE (di dalam)' : '⚪ Peserta OUTSIDE (di luar)';
-            const choice = await Swal.fire({
-              title: 'Pintu Keluar - Pilih Aksi',
-              html: `<h3 style="color:#2ecc71">${name}</h3><p>No HP: <b>${phone}</b></p>${badgeHtml}<p style="font-size:13px;font-weight:bold;margin:8px 0">${statusLabel}</p><small>Pilih aksi untuk peserta ini:</small>`,
-              icon: 'question',
-              showDenyButton: true,
-              showCancelButton: true,
-              confirmButtonText: '🚪 KELUAR',
-              denyButtonText: '🚶 MASUK',
-              cancelButtonText: 'Batal',
-              confirmButtonColor: '#dc2626',
-              denyButtonColor: '#16a34a'
-            });
-            if (choice.isConfirmed || choice.isDenied) {
-              const decision = choice.isConfirmed ? 'keluar' : 'masuk';
-              const res = await fetch('/api/sxjxfx6x6x6x/scan', {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json', Authorization: `Basic ${auth}` },
-                body: JSON.stringify({ qr_content: scannedOrderId, mode: 'keluar', decision })
-              });
-              const nextData = await res.json();
-
-              // Jika API kembalikan cek_kartu_misi → tampilkan dialog ADA/TIDAK
-              if (nextData.success && nextData.action === 'cek_kartu_misi') {
-                const cekResult = await Swal.fire({
-                  title: 'ADMIN CEK KARTU MISI',
-                  html: `<h3 style="color:#2ecc71">${nextData.data?.nama || name}</h3><p>No HP: <b>${nextData.data?.no_hp || phone}</b></p><p style="font-size:16px;font-weight:bold;color:#d97706;margin-top:12px">Cek Kartu Misi ADA atau TIDAK?</p>`,
-                  icon: 'question',
-                  showCancelButton: true,
-                  confirmButtonText: 'ADA Kartu Misi',
-                  cancelButtonText: 'TIDAK ADA',
-                  confirmButtonColor: '#16a34a',
-                  cancelButtonColor: '#dc2626',
-                  background: '#fffbeb'
-                });
-                if (cekResult.isConfirmed) {
-                  const masukRes = await fetch('/api/sxjxfx6x6x6x/scan', {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json', Authorization: `Basic ${auth}` },
-                    body: JSON.stringify({ qr_content: scannedOrderId, mode: 'masuk', confirm_kartu_fisik: true })
-                  });
-                  const masukData = await masukRes.json();
-                  if (masukData.success) {
-                    Swal.fire({ title: titleMap[masukData.action] || 'MASUK LAGI ✅', text: 'Peserta boleh masuk kembali.', icon: 'success', timer: 2000, showConfirmButton: false });
-                  } else {
-                    Swal.fire('DITOLAK! ❌', masukData.message, 'error');
-                  }
-                } else {
-                  Swal.fire('DITOLAK! ❌', 'Tidak ada kartu misi. Peserta tidak boleh masuk.', 'error');
-                }
-              } else if (nextData.success) {
-                Swal.fire({
-                  title: titleMap[nextData.action] || 'BERHASIL ✅',
-                  text: nextData.message || 'Status diperbarui.',
-                  icon: 'success',
-                  timer: 2000,
-                  showConfirmButton: false
-                });
-              } else {
-                Swal.fire('DITOLAK! ❌', nextData.message, 'error');
-              }
-            }
-            resetScanner();
-            return;
-          }
-
+          // === PINTU KELUAR: otomatis keluar (action = 'keluar') ===
           Swal.fire({
             title,
-            html: `<h3 style="color:#2ecc71">${name}</h3><p>No HP: <b>${phone}</b></p>${badgeHtml}<small>${helperText}</small>`,
+            html: `<h3 style="color:#2ecc71">${name}</h3><p>No HP: <b>${phone}</b></p>${badgeHtml}`,
             icon: 'success',
             timer: 2500,
             showConfirmButton: false,

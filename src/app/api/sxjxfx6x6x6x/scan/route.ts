@@ -32,7 +32,7 @@ export async function POST(req: NextRequest) {
   try {
     await initializeDatabase();
 
-    const { qr_content, mode, confirm_kartu_misi, confirm_kartu_fisik, decision } = await req.json();
+    const { qr_content, mode, confirm_masuk } = await req.json();
     const scanMode = mode === 'keluar' ? 'keluar' : mode === 'masuk' ? 'masuk' : null;
     if (!scanMode) {
       return NextResponse.json({ success: false, message: 'MODE SCAN TIDAK VALID' }, { status: 400 });
@@ -53,27 +53,30 @@ export async function POST(req: NextRequest) {
     const statusMasuk = normalizeStatusMasuk(order.status_masuk || (order.status_tiket === 'sudah_masuk' ? 'sudah' : 'belum'));
     const kartuMisi = order.kartu_misi ?? (order.status_tiket === 'sudah_masuk' ? 1 : 0);
 
-    if (confirm_kartu_misi) {
+    // =============================================
+    // CONFIRM MASUK (dari dialog admin)
+    // confirm_masuk = 'pertama' → pertama kali, kasih kartu misi
+    // confirm_masuk = 'ada_kartu' → re-entry, kartu misi ada
+    // =============================================
+    if (confirm_masuk === 'pertama') {
       Order.update(qr_content, {
         kartu_misi: 1,
         status_masuk: 'sudah',
         status_tiket: 'sudah_masuk'
       });
-
       return NextResponse.json({
         success: true,
-        message: 'Kartu Misi Diberikan',
-        action: 'kartu_diberikan',
+        message: 'Masuk & Kartu Misi Diberikan',
+        action: 'masuk_pertama_ok',
         data: { nama: order.nama, no_hp: order.no_hp, status_masuk: 'sudah', kartu_misi: 1 }
       });
     }
 
-    if (confirm_kartu_fisik) {
+    if (confirm_masuk === 'ada_kartu') {
       Order.update(qr_content, {
         status_masuk: 'sudah',
         status_tiket: 'sudah_masuk'
       });
-
       return NextResponse.json({
         success: true,
         message: 'Masuk Kembali',
@@ -83,98 +86,56 @@ export async function POST(req: NextRequest) {
     }
 
     // =============================================
-    // PINTU MASUK: hanya untuk masuk
+    // PINTU MASUK: khusus masuk saja
     // =============================================
     if (scanMode === 'masuk') {
       // Sudah di dalam → TOLAK
       if (statusMasuk === 'sudah') {
-        return NextResponse.json({ success: false, message: 'DITOLAK: QR sudah di dalam' });
+        return NextResponse.json({ success: false, message: 'DITOLAK: Tiket sudah di dalam' });
       }
 
-      // Masuk kembali (pernah masuk sebelumnya, punya kartu misi) → cek kartu misi
-      if (kartuMisi) {
+      // Pertama kali (belum pernah masuk, belum punya kartu misi)
+      // → Tampilkan konfirmasi "Sudah kasih kartu misi?"
+      if (!kartuMisi) {
         return NextResponse.json({
           success: true,
-          message: 'Admin Cek Kartu Misi ADA atau TIDAK',
-          action: 'cek_kartu_misi',
-          data: { nama: order.nama, no_hp: order.no_hp, status_masuk: 'belum', kartu_misi: kartuMisi }
+          message: 'Konfirmasi Masuk Pertama Kali',
+          action: 'konfirmasi_masuk_pertama',
+          data: { nama: order.nama, no_hp: order.no_hp, status_masuk: 'belum', kartu_misi: 0 }
         });
       }
 
-      // Pertama kali masuk → berikan kartu misi
-      Order.update(qr_content, {
-        status_masuk: 'sudah',
-        status_tiket: 'sudah_masuk'
-      });
-
+      // Re-entry (pernah masuk, punya kartu misi, status keluar)
+      // → Admin cek kartu misi ADA atau TIDAK
       return NextResponse.json({
         success: true,
-        message: 'Berikan Kartu Misi',
-        action: 'beri_kartu',
-        data: {
-          nama: order.nama,
-          no_hp: order.no_hp,
-          status_masuk: 'sudah',
-          kartu_misi: kartuMisi,
-          kartu_misi_pending: true
-        }
-      });
-    }
-
-    // =============================================
-    // PINTU KELUAR: ada pilihan masuk atau keluar
-    // =============================================
-
-    // Pertama kali (belum pernah masuk, tidak punya kartu misi) → harus scan di pintu masuk dulu
-    if (statusMasuk === 'belum' && !kartuMisi) {
-      return NextResponse.json({
-        success: false,
-        message: 'Silahkan scan di pintu masuk'
-      });
-    }
-
-    // Belum ada keputusan → tampilkan pilihan keluar/masuk
-    if (!decision) {
-      return NextResponse.json({
-        success: true,
-        message: 'Pilih Aksi Keluar/Masuk',
-        action: 'pilih_keluar_masuk',
-        data: { nama: order.nama, no_hp: order.no_hp, status_masuk: statusMasuk, kartu_misi: kartuMisi }
-      });
-    }
-
-    // Pilih MASUK dari pintu keluar
-    if (decision === 'masuk') {
-      // Sudah di dalam → TOLAK
-      if (statusMasuk === 'sudah') {
-        return NextResponse.json({ success: false, message: 'DITOLAK: QR sudah di dalam' });
-      }
-
-      // Masuk kembali → cek kartu misi
-      if (kartuMisi) {
-        return NextResponse.json({
-          success: true,
-          message: 'Admin Cek Kartu Misi ADA atau TIDAK',
-          action: 'cek_kartu_misi',
-          data: { nama: order.nama, no_hp: order.no_hp, status_masuk: 'belum', kartu_misi: kartuMisi }
-        });
-      }
-
-      // Seharusnya tidak sampai sini (belum+noKartu sudah ditolak di atas)
-      return NextResponse.json({ success: false, message: 'Silahkan scan di pintu masuk' });
-    }
-
-    // Pilih KELUAR dari pintu keluar
-    if (statusMasuk === 'belum') {
-      return NextResponse.json({
-        success: true,
-        message: 'Peserta sudah di luar',
-        action: 'keluar_tetap',
+        message: 'Admin Cek Kartu Misi ADA atau TIDAK',
+        action: 'cek_kartu_misi',
         data: { nama: order.nama, no_hp: order.no_hp, status_masuk: 'belum', kartu_misi: kartuMisi }
       });
     }
 
-    // Proses keluar
+    // =============================================
+    // PINTU KELUAR: khusus keluar saja (otomatis)
+    // =============================================
+
+    // Belum pernah masuk → tolak
+    if (statusMasuk === 'belum' && !kartuMisi) {
+      return NextResponse.json({
+        success: false,
+        message: 'Silahkan scan di pintu masuk terlebih dahulu'
+      });
+    }
+
+    // Sudah di luar → info saja
+    if (statusMasuk === 'belum') {
+      return NextResponse.json({
+        success: false,
+        message: 'Peserta sudah di luar'
+      });
+    }
+
+    // Proses keluar otomatis
     Order.update(qr_content, {
       status_masuk: 'belum',
       status_tiket: 'belum_masuk'
